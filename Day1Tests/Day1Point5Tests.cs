@@ -1,6 +1,6 @@
 using Day1Point5;
 
-namespace Day1Tests
+namespace UnitTests
 {
     [TestClass]
     public class Day1Point5Tests
