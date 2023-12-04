@@ -18,10 +18,25 @@ namespace Day2.Tests
             Assert.AreEqual(8, result);
         }
 
+        [TestMethod()]
         public void ProcessTestFullData()
         {
             var result = Matcher.Process("day2input.txt");
             Assert.AreEqual(2162, result);
+        }
+
+        [TestMethod()]
+        public void ProcessTestV2()
+        {
+            var result = MatcherV2.Process("day2testinput.txt");
+            Assert.AreEqual(2286, result);
+        }
+
+        [TestMethod()]
+        public void ProcessTestV2FullData()
+        {
+            var result = MatcherV2.Process("day2input.txt");
+            Assert.AreEqual(72513, result);
         }
     }
 }
