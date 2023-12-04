@@ -11,7 +11,7 @@ namespace Day3
         private static Dictionary<(int x, int y), List<int>>  starParts = [];
 
 
-        public static void AddToStars(int value, int row, int startColumn, int endColumn, int maxRows, int maxColumns)
+        public static void AddToStars(int value, int row, int startColumn, int endColumn, int maxRows, int maxColumns, string[] text)
         {
 
 
@@ -38,6 +38,10 @@ namespace Day3
                     {
                         parts.Add(value);
                     }
+                    else if (text[i][j] == '*')
+                    {
+                        starParts.Add((i, j), [value]);
+                    }
                 }
                 
             }
@@ -51,18 +55,6 @@ namespace Day3
             var numLines = text.Length;
             var numColumns = text[0].Length;
 
-
-            for(int i = 0; i < numLines; i++)
-            {
-                for (int j = 0; j < numColumns; j++)
-                {
-                    // it's a valid symbol if it's not a digit or a dot
-                    if(text[i][j] == '*')
-                    {
-                        starParts.Add((i, j), []);
-                    }
-                }
-            }
 
             string digitString = "0123456789";
 
@@ -100,7 +92,7 @@ namespace Day3
                             lbProcessingNumber = false;
                             endColumn = j - 1;
 
-                            AddToStars(number, i, startColumn, endColumn, numLines, numColumns);
+                            AddToStars(number, i, startColumn, endColumn, numLines, numColumns,text);
                         }
                     }
                 }
@@ -110,7 +102,7 @@ namespace Day3
                     lbProcessingNumber = false;
                     endColumn = numColumns - 1;
 
-                    AddToStars(number, i, startColumn, endColumn, numLines, numColumns);
+                    AddToStars(number, i, startColumn, endColumn, numLines, numColumns,text);
 
                 }
             }
