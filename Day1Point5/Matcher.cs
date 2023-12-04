@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Day1Point5
 {
-    internal class Matcher
+    public class Matcher
     {
-        static readonly Dictionary<string, int> _numbers = new Dictionary<string, int>
+        static readonly Dictionary<string, int> _numbers = new()
         {
             { "zero", 0 },
             { "one", 1 },
@@ -22,7 +23,7 @@ namespace Day1Point5
             { "nine", 9 },
         };
 
-        public static int Match(string line)
+        private static int Match(string line)
         {
             if(_numbers.TryGetValue(line, out int number))
             {
@@ -30,6 +31,44 @@ namespace Day1Point5
             }
 
             return int.Parse(line);
+        }
+
+        public static int Process(string filename)
+        {
+            var text = File.ReadAllLines(filename);
+
+            int total = 0;
+
+            var regexString = @"(zero|one|two|three|four|five|six|seven|eight|nine|\d)";
+            var regex = new Regex(regexString);
+            var regexBack = new Regex(regexString, RegexOptions.RightToLeft);
+
+            foreach (var line in text)
+            {
+                var regexResult = regex.Match(line);
+                int value = 0;
+
+                if (!regexResult.Success)
+                {
+                    throw new Exception("Regex failed");
+                }
+
+                value += Match(regexResult.Groups[1].Value) * 10;
+
+                regexResult = regexBack.Match(line);
+                if (!regexResult.Success)
+                {
+                    throw new Exception("Regex failed");
+                }
+                value += Match(regexResult.Groups[1].Value);
+
+                Console.WriteLine($"Value: {value}");
+                total += value;
+            }
+
+            Console.WriteLine($"Total: {total}");
+
+            return total;
         }
     }
 }

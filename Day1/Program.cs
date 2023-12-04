@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Text.RegularExpressions;
 
-var text = await File.ReadAllLinesAsync("testinput.txt");
+var text = await File.ReadAllLinesAsync("day1input.txt");
 
 int total = 0;
 
