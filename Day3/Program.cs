@@ -2,4 +2,4 @@
 
 using Day3;
 
-PartFinder.Process("day3input.txt");
+GearRatios.Process("day3input.txt");

@@ -6,22 +6,25 @@ using System.Threading.Tasks;
 
 namespace Day3
 {
-    public class PartFinder
+    public class GearRatios
     {
-        public static bool IsValidPart(int row, int startColumn, int endColumn, bool[,] symbolLookup)
+        private static readonly Dictionary<(int x, int y), List<int>>  starParts = [];
+
+
+        public static void AddToStars(int value, int row, int startColumn, int endColumn, int maxRows, int maxColumns)
         {
 
 
             for (int i = row -1; i <= row + 1; i++)
             {
-                if(i < 0 || i >= symbolLookup.GetLength(0))
+                if(i < 0 || i >= maxRows)
                 {
                     continue;
                 }
 
                 for (int j = startColumn - 1; j <= endColumn + 1; j++)
                 {
-                    if (j < 0 || j >= symbolLookup.GetLength(1))
+                    if (j < 0 || j >= maxColumns)
                     {
                         continue;
                     }
@@ -31,14 +34,13 @@ namespace Day3
                         continue;
                     }
 
-                    if (symbolLookup[i, j])
+                    if (starParts.TryGetValue((i, j), out var parts ))
                     {
-                        return true;
+                        parts.Add(value);
                     }
                 }
                 
             }
-            return false;
         }
 
         static public int Process(string filename)
@@ -48,16 +50,16 @@ namespace Day3
             var numLines = text.Length;
             var numColumns = text[0].Length;
 
-            var symbolLookup = new bool[numLines, numColumns];
-
-            string invalidSymbol = ".";
 
             for(int i = 0; i < numLines; i++)
             {
                 for (int j = 0; j < numColumns; j++)
                 {
                     // it's a valid symbol if it's not a digit or a dot
-                    symbolLookup[i, j] = !invalidSymbol.Contains(text[i][j]);
+                    if(text[i][j] == '*')
+                    {
+                        starParts.Add((i, j), []);
+                    }
                 }
             }
 
@@ -97,14 +99,7 @@ namespace Day3
                             lbProcessingNumber = false;
                             endColumn = j - 1;
 
-                            if(IsValidPart(i,startColumn, endColumn, symbolLookup))
-                            {
-                                partTotal += number;
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Part {number} line {i} is Invalid");
-                            }
+                            AddToStars(number, i, startColumn, endColumn, numLines, numColumns);
                         }
                     }
                 }
@@ -114,14 +109,16 @@ namespace Day3
                     lbProcessingNumber = false;
                     endColumn = numColumns - 1;
 
-                    if (IsValidPart(i, startColumn, endColumn, symbolLookup))
-                    {
-                        partTotal += number;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Part {number} line {i} is Invalid");
-                    }
+                    AddToStars(number, i, startColumn, endColumn, numLines, numColumns);
+
+                }
+            }
+
+            foreach(var list in starParts.Values)
+            {
+                if(list.Count == 2)
+                {
+                    partTotal += list[0] * list[1];
                 }
             }
 

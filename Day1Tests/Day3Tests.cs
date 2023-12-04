@@ -24,5 +24,19 @@ namespace Day3.Tests
             var result = PartFinder.Process("day3input.txt");
             Assert.AreEqual(536576, result);
         }
+
+        [TestMethod()]
+        public void ProcessGearRatios()
+        {
+            var result = GearRatios.Process("day3testinput.txt");
+            Assert.AreEqual(467835, result);
+        }
+
+        [TestMethod()]
+        public void ProcessGearRatiosFullData()
+        {
+            var result = GearRatios.Process("day3input.txt");
+            Assert.AreEqual(75741499, result);
+        }        
     }
 }
