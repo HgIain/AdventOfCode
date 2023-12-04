@@ -6,26 +6,20 @@ var text = await File.ReadAllLinesAsync("testinput.txt");
 int total = 0;
 
 var regexString = @"(\d)";
-var regex1 = new Regex(regexString);
-var regex2 = new Regex(regexString, RegexOptions.RightToLeft);
+var regex = new Regex(regexString);
 
 foreach (var line in text)
 {
+    var regexResult = regex.Matches(line);
     int value = 0;
 
-    var regexResult = regex1.Match(line);
-    if (!regexResult.Success)
+    if (regexResult.Count == 0)
     {
         throw new Exception("Regex failed");
     }
-    value += int.Parse(regexResult.Groups[1].Value) * 10;
 
-    regexResult = regex2.Match(line);
-    if (!regexResult.Success)
-    {
-        throw new Exception("Regex failed");
-    }
-    value += int.Parse(regexResult.Groups[1].Value);
+    value += int.Parse(regexResult[0].Value) * 10;
+    value += int.Parse(regexResult[^1].Value);
 
     Console.WriteLine($"Value: {value}");
     total += value;
