@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Day1
 {
-    public class Matcher
+    public partial class Matcher
     {
         public static int Process(string filename)
         {
@@ -15,8 +15,7 @@ namespace Day1
 
             int total = 0;
 
-            var regexString = @"(\d)";
-            var regex = new Regex(regexString);
+            var regex = NumberRegex();
 
             foreach (var line in text)
             {
@@ -39,5 +38,8 @@ namespace Day1
 
             return total;
         }
+
+        [GeneratedRegex(@"(\d)")]
+        private static partial Regex NumberRegex();
     }
 }
