@@ -5,8 +5,8 @@ var text = await File.ReadAllLinesAsync("aocinput.txt");
 
 int total = 0;
 
-var regex1 = new Regex("\\D*(\\d).*(\\d)\\D*", new RegexOptions { });
-var regex2 = new Regex("\\D*(\\d)\\D*", new RegexOptions { });
+var regex1 = new Regex(@"\D*(\d).*(\d)\D*", new RegexOptions { });
+var regex2 = new Regex(@"\D*(\d)\D*", new RegexOptions { });
 
 foreach (var line in text)
 {
