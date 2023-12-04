@@ -14,14 +14,14 @@ namespace Day3.Tests
         [TestMethod()]
         public void ProcessTest()
         {
-            var result = PartFinder.Process("day3testinput.txt");
+            var result = PartFinder.Process("Day3TestInput.txt");
             Assert.AreEqual(4361, result);
         }
 
         [TestMethod()]
         public void ProcessTestFullData()
         {
-            var result = PartFinder.Process("day3input.txt");
+            var result = PartFinder.Process("Day3Input.txt");
             Assert.AreEqual(536576, result);
         }
 

@@ -8,7 +8,7 @@ namespace Day3
 {
     public class GearRatios
     {
-        private static readonly Dictionary<(int x, int y), List<int>>  starParts = [];
+        private static Dictionary<(int x, int y), List<int>>  starParts = [];
 
 
         public static void AddToStars(int value, int row, int startColumn, int endColumn, int maxRows, int maxColumns)
@@ -45,6 +45,7 @@ namespace Day3
 
         static public int Process(string filename)
         {
+            starParts = [];
             var text = File.ReadAllLines(filename);
 
             var numLines = text.Length;
