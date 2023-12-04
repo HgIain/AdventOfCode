@@ -28,14 +28,14 @@ namespace Day3.Tests
         [TestMethod()]
         public void ProcessGearRatios()
         {
-            var result = GearRatios.Process("day3testinput.txt");
+            var result = GearRatios.Process("Day3TestInput.txt");
             Assert.AreEqual(467835, result);
         }
 
         [TestMethod()]
         public void ProcessGearRatiosFullData()
         {
-            var result = GearRatios.Process("day3input.txt");
+            var result = GearRatios.Process("Day3Input.txt");
             Assert.AreEqual(75741499, result);
         }        
     }
