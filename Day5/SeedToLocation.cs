@@ -102,15 +102,19 @@ namespace Day5
 
             long minLocation = long.MaxValue;
 
-            foreach (var seed in seeds)
+
+            Parallel.ForEach(seeds, (seed) =>
             {
                 var result = ProcessSeedRange(seed);
-                
-                if(result < minLocation)
+
+                lock (this)
                 {
-                    minLocation = result;
+                    if (result < minLocation)
+                    {
+                        minLocation = result;
+                    }
                 }
-            }
+            });
 
             Console.WriteLine($"Lowest location: {minLocation}");
 
@@ -120,21 +124,34 @@ namespace Day5
         private long ProcessSeedRange(SeedRange seedRange)
         {
             long minLocation = long.MaxValue;
-            for (long i = 0; i < seedRange.length; i++)
-            {
-                long value = seedRange.start + i;
 
-                foreach (var rangeMap in rangeMaps)
+            Parallel.For<long> ( 0, seedRange.length, () => long.MaxValue,
+                (i, loop, localMin) =>
                 {
-                    var oldvalue = value;
-                    value = LookupValue(value, rangeMap);
-                }
+                    long value = seedRange.start + i;
 
-                if(value < minLocation)
+                    foreach (var rangeMap in rangeMaps)
+                    {
+                        var oldvalue = value;
+                        value = LookupValue(value, rangeMap);
+                    }
+
+                    if (value < localMin)
+                    {
+                        localMin = value;
+                    }
+
+                    return localMin;
+                },
+                (x) =>
                 {
-                    minLocation = value;
+                    lock(this)
+                    {
+                        minLocation = Math.Min(minLocation, x);
+                    }
                 }
-            }
+            );
+
 
             return minLocation;
         }
