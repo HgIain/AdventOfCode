@@ -10,12 +10,27 @@ namespace Day5
     {
         private record RangeMap(long srcStart, long destStart, long length);
 
-        private IEnumerable<long> seeds = [];
+        private List<long> seeds = [];
         private readonly List<List<RangeMap>> rangeMaps = [];
 
-        public void ProcessMaps(string[] text)
+        public void ProcessMaps(string[] text, bool seedRange)
         {
-            seeds = text[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(c=> long.Parse(c));
+            if (!seedRange)
+            {
+                seeds = text[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(c => long.Parse(c)).ToList();
+            }
+            else
+            {
+                var seedRanges = text[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(c => long.Parse(c)).ToList();
+
+                for(int i=0; i<seedRanges.Count; i+=2)
+                {
+                    for(var j = seedRanges[i]; j < seedRanges[i] + seedRanges[i+1]; j++)
+                    {
+                        seeds.Add(j);
+                    }
+                }
+            }
 
             List<RangeMap>? rangeMap = null;
 
@@ -70,11 +85,11 @@ namespace Day5
             return rangeMap[index].destStart + (value - rangeMap[index].srcStart);
         }
 
-        public long Process()
+        public long Process(bool useSeedRanges = false)
         {
             var text = File.ReadAllLines(filename);
 
-            ProcessMaps(text);
+            ProcessMaps(text, useSeedRanges);
 
             long minLocation = long.MaxValue;
 
@@ -101,8 +116,6 @@ namespace Day5
             {
                 var oldvalue = value;
                 value = LookupValue(value,rangeMap);
-
-                Console.WriteLine($"Seed {seed} -> {oldvalue} -> {value}");
             }
 
             return value;

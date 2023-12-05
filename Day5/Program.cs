@@ -4,4 +4,4 @@ using Day5;
 Console.WriteLine("Hello, World!");
 
 var blah = new SeedToLocation("Day5Input.txt");
-blah.Process();
+blah.Process(true);
