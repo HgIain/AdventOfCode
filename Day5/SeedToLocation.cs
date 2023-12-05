@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,29 @@ namespace Day5
 {
     public class SeedToLocation(string filename)
     {
-        private record RangeMap(long srcStart, long destStart, long length);
+        private record RangeMap(long srcStart, long destStart, long length) :IComparable<RangeMap>
+        {
+            public int CompareTo(RangeMap? other)
+            {
+                if(other is null)
+                {
+                    return 1;
+                }
+
+                if (other.srcStart < srcStart)
+                {
+                    return 1;
+                }
+
+                if (other.srcStart >= srcStart + length)
+                {
+                    return -1;
+                }
+
+
+                return 0;
+            }
+        }
         private record SeedRange(long start, long length);
 
         private readonly List<SeedRange> seeds = [];
@@ -73,30 +96,64 @@ namespace Day5
                 rangeMaps[i] = [.. rangeMaps[i].OrderBy(c=>c.srcStart)];
             }
 
+            //CombineRanges(rangeMaps[0], rangeMaps[1]);
+
         }
 
-        private static long LookupValue(long value, List<RangeMap> rangeMap)
+        private List<RangeMap> CombineRanges(List<RangeMap> one, List<RangeMap> two)
         {
-            for(int i = 0; i< rangeMap.Count;i++)
+            var maxOne = one[^1].srcStart + one[^1].length;
+            var maxTwo = two[^1].srcStart + two[^1].length;
+            var overallMax = Math.Max(maxOne, maxTwo);
+
+            List<RangeMap> combined = [];
+
+            int oneIndex = 0;
+            int twoIndex = 0;
+
+            while(oneIndex < maxOne && twoIndex < maxTwo)
             {
-                var range = rangeMap[i];
+                var oneRange = one[oneIndex];
+                var twoRange = two[twoIndex];
 
-                if (value < range.srcStart)
+                if (oneRange.srcStart < twoRange.srcStart)
                 {
-                    return value;
+                    combined.Add(oneRange);
+                    oneIndex++;
                 }
-
-                if (value >= range.srcStart && value < range.srcStart + range.length)
+                else
                 {
-                    return range.destStart + (value - range.srcStart);
+                    combined.Add(twoRange);
+                    twoIndex++;
                 }
             }
 
-            return value;
+            return combined;
+
+        }
+
+
+        private static long LookupValue(long value, List<RangeMap> rangeMap)
+        {
+            var compareRange = new RangeMap(value, 0, 1);
+
+            int index = rangeMap.BinarySearch(compareRange);
+
+            if (index < 0)
+            {
+                return value;
+            }
+
+            var range = rangeMap[index];
+
+            return range.destStart + (value - range.srcStart);
         }
 
         public long Process(bool useSeedRanges = false)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             var text = File.ReadAllLines(filename);
 
             ProcessMaps(text, useSeedRanges);
@@ -114,6 +171,9 @@ namespace Day5
 
             long minLocation = allMins.Min();
             Console.WriteLine($"Lowest location: {minLocation}");
+
+            stopwatch.Stop();
+            Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds}ms");
 
             return minLocation;
         }
