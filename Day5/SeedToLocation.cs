@@ -9,15 +9,21 @@ namespace Day5
     public class SeedToLocation(string filename)
     {
         private record RangeMap(long srcStart, long destStart, long length);
+        private record SeedRange(long start, long length);
 
-        private List<long> seeds = [];
+        private List<SeedRange> seeds = [];
         private readonly List<List<RangeMap>> rangeMaps = [];
 
         public void ProcessMaps(string[] text, bool seedRange)
         {
             if (!seedRange)
             {
-                seeds = text[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(c => long.Parse(c)).ToList();
+                var singleseeds = text[0].Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(c => long.Parse(c)).ToList();
+
+                foreach (var seed in singleseeds)
+                {
+                    seeds.Add(new(seed, 1));
+                }
             }
             else
             {
@@ -25,10 +31,7 @@ namespace Day5
 
                 for(int i=0; i<seedRanges.Count; i+=2)
                 {
-                    for(var j = seedRanges[i]; j < seedRanges[i] + seedRanges[i+1]; j++)
-                    {
-                        seeds.Add(j);
-                    }
+                    seeds.Add(new(seedRanges[i], seedRanges[i + 1]));
                 }
             }
 
@@ -73,16 +76,22 @@ namespace Day5
 
         private long LookupValue(long value, List<RangeMap> rangeMap)
         {
-            int index = rangeMap.FindIndex(c=>c.srcStart <= value && c.srcStart + c.length > value);
-
-            if (index == -1)
+            for(int i = 0; i< rangeMap.Count;i++)
             {
-                return value;
+                var range = rangeMap[i];
+
+                if (value < range.srcStart)
+                {
+                    return value;
+                }
+
+                if (value >= range.srcStart && value < range.srcStart + range.length)
+                {
+                    return range.destStart + (value - range.srcStart);
+                }
             }
 
-            var range = rangeMap[index];
-
-            return rangeMap[index].destStart + (value - rangeMap[index].srcStart);
+            return value;
         }
 
         public long Process(bool useSeedRanges = false)
@@ -95,7 +104,7 @@ namespace Day5
 
             foreach (var seed in seeds)
             {
-                var result = ProcessSeed(seed);
+                var result = ProcessSeedRange(seed);
                 
                 if(result < minLocation)
                 {
@@ -108,17 +117,26 @@ namespace Day5
             return minLocation;
         }
 
-        public long ProcessSeed(long seed)
+        private long ProcessSeedRange(SeedRange seedRange)
         {
-            long value = seed;
-
-            foreach (var rangeMap in rangeMaps)
+            long minLocation = long.MaxValue;
+            for (long i = 0; i < seedRange.length; i++)
             {
-                var oldvalue = value;
-                value = LookupValue(value,rangeMap);
+                long value = seedRange.start + i;
+
+                foreach (var rangeMap in rangeMaps)
+                {
+                    var oldvalue = value;
+                    value = LookupValue(value, rangeMap);
+                }
+
+                if(value < minLocation)
+                {
+                    minLocation = value;
+                }
             }
 
-            return value;
+            return minLocation;
         }
     }
 }
