@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace Day5
         private record RangeMap(long srcStart, long destStart, long length);
         private record SeedRange(long start, long length);
 
-        private List<SeedRange> seeds = [];
+        private readonly List<SeedRange> seeds = [];
         private readonly List<List<RangeMap>> rangeMaps = [];
 
         public void ProcessMaps(string[] text, bool seedRange)
@@ -47,7 +48,7 @@ namespace Day5
 
                 if (line.EndsWith("map:"))
                 {
-                    rangeMap = new();
+                    rangeMap = [];
                     rangeMaps.Add(rangeMap);
                     continue;
                 }
@@ -69,12 +70,12 @@ namespace Day5
 
             for(int i =0; i<rangeMaps.Count;i++)
             {
-                rangeMaps[i] = rangeMaps[i].OrderBy(c=>c.srcStart).ToList();
+                rangeMaps[i] = [.. rangeMaps[i].OrderBy(c=>c.srcStart)];
             }
 
         }
 
-        private long LookupValue(long value, List<RangeMap> rangeMap)
+        private static long LookupValue(long value, List<RangeMap> rangeMap)
         {
             for(int i = 0; i< rangeMap.Count;i++)
             {
@@ -100,22 +101,18 @@ namespace Day5
 
             ProcessMaps(text, useSeedRanges);
 
-            long minLocation = long.MaxValue;
+            ConcurrentBag<long> allMins = [];
 
 
             Parallel.ForEach(seeds, (seed) =>
             {
                 var result = ProcessSeedRange(seed);
 
-                lock (this)
-                {
-                    if (result < minLocation)
-                    {
-                        minLocation = result;
-                    }
-                }
+                allMins.Add(result);
             });
 
+
+            long minLocation = allMins.Min();
             Console.WriteLine($"Lowest location: {minLocation}");
 
             return minLocation;
@@ -123,7 +120,7 @@ namespace Day5
 
         private long ProcessSeedRange(SeedRange seedRange)
         {
-            long minLocation = long.MaxValue;
+            ConcurrentBag<long> allMins = [];
 
             Parallel.For<long> ( 0, seedRange.length, () => long.MaxValue,
                 (i, loop, localMin) =>
@@ -145,15 +142,12 @@ namespace Day5
                 },
                 (x) =>
                 {
-                    lock(this)
-                    {
-                        minLocation = Math.Min(minLocation, x);
-                    }
+                    allMins.Add(x);
                 }
             );
 
 
-            return minLocation;
+            return allMins.Min();
         }
     }
 }
