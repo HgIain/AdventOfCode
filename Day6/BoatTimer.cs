@@ -92,6 +92,7 @@ namespace Day6
 
 
             return possibleWinningTimes;
+
         }
 
     }

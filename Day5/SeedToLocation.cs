@@ -37,6 +37,8 @@ namespace Day5
 
         private readonly List<SeedRange> seeds = [];
         private readonly List<List<RangeMap>> rangeMaps = [];
+        List<RangeMap> combined = [];
+
 
         public void ProcessMaps(string[] text, bool seedRange)
         {
@@ -96,8 +98,36 @@ namespace Day5
                 rangeMaps[i] = [.. rangeMaps[i].OrderBy(c=>c.srcStart)];
             }
 
-            //CombineRanges(rangeMaps[0], rangeMaps[1]);
+            combined = rangeMaps[0];
 
+            for(int i=1; i<rangeMaps.Count; i++)
+            {
+                combined = CombineRanges(combined, rangeMaps[i]);
+            }
+
+        }
+
+        private record Offset(long length, long offset);
+
+        private static Offset GetLengthAndOffsetForIndex(List<RangeMap> rangeMap, long index)
+        {
+            for(int i=0; i<rangeMap.Count; i++)
+            {
+                var range = rangeMap[i];
+
+                if (index >= range.srcStart && index < range.srcStart + range.length)
+                {
+                    return new(range.length - (index - range.srcStart), range.destStart - range.srcStart);
+                }
+
+                if (range.srcStart > index)
+                {
+                    return new(range.srcStart - index, 0);
+                }
+            }
+
+            // off the end
+            return new (0, 0);
         }
 
         private List<RangeMap> CombineRanges(List<RangeMap> one, List<RangeMap> two)
@@ -108,24 +138,48 @@ namespace Day5
 
             List<RangeMap> combined = [];
 
-            int oneIndex = 0;
-            int twoIndex = 0;
+            long index = 0;
 
-            while(oneIndex < maxOne && twoIndex < maxTwo)
+            while(index < overallMax)
             {
-                var oneRange = one[oneIndex];
-                var twoRange = two[twoIndex];
+                Offset oneOffset = GetLengthAndOffsetForIndex(one, index);
+                Offset twoOffset = GetLengthAndOffsetForIndex(two, index + oneOffset.offset);
 
-                if (oneRange.srcStart < twoRange.srcStart)
+                if(oneOffset.length == 0 && twoOffset.length == 0)
                 {
-                    combined.Add(oneRange);
-                    oneIndex++;
+                    // reached the end
+                    break;
                 }
-                else
+
+                if(twoOffset.length == 0)
                 {
-                    combined.Add(twoRange);
-                    twoIndex++;
+                    // off the end of two, just use the one offset
+                    combined.Add(new RangeMap(index, oneOffset.offset + index, oneOffset.length));
+                    index += oneOffset.length;
+                    continue;
                 }
+                if (oneOffset.length == 0)
+                {
+                    // off the end of one, just use the two offset
+                    combined.Add(new RangeMap(index, twoOffset.offset + index, twoOffset.length));
+                    index += twoOffset.length;
+                    continue;
+                }
+
+                long minLen = Math.Min(oneOffset.length, twoOffset.length);
+
+                if (oneOffset.offset == 0 && twoOffset.offset == 0)
+                {
+                     // neither offset, so just skip
+                     index += minLen;
+                    continue;
+                }
+
+
+                // just add the offsets together??
+                combined.Add(new RangeMap(index, oneOffset.offset + twoOffset.offset + index, minLen));
+                index += minLen;
+
             }
 
             return combined;
@@ -187,11 +241,7 @@ namespace Day5
                 {
                     long value = seedRange.start + i;
 
-                    foreach (var rangeMap in rangeMaps)
-                    {
-                        var oldvalue = value;
-                        value = LookupValue(value, rangeMap);
-                    }
+                    value = LookupValue(value, combined);
 
                     if (value < localMin)
                     {
