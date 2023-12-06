@@ -51,10 +51,14 @@ namespace Day6
 
             long winningTimes = 1;
 
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
             foreach(var boatRecord in boatRecords)
             {
                 winningTimes *= CalculateWinningTimes(boatRecord);
             }
+            stopwatch.Stop();
+            Console.WriteLine($"Elapsed time {stopwatch.ElapsedMilliseconds}ms");
 
             Console.WriteLine($"Winning times {winningTimes}");
 
@@ -67,20 +71,22 @@ namespace Day6
             // approximate the first by dividing the distance by the time
 
             long minWinningTime = boatRecord.distance / boatRecord.time;
+            long binarySearchUpper = boatRecord.time / 2;
 
             Console.WriteLine($"First order approximation of min winning time: {minWinningTime}");
 
-            // find the actual min winning time by iterating through the times
-            // could binary search, but this is easier
-            for (long i = minWinningTime; i<boatRecord.time; i++)
+            // binary search to find the min winning time
+            while(minWinningTime < binarySearchUpper)
             {
-                if(i * (boatRecord.time - i) > boatRecord.distance)
+                var mid = (minWinningTime + binarySearchUpper) / 2;
+
+                if (mid * (boatRecord.time - mid) > boatRecord.distance)
                 {
-                    minWinningTime = i;
-
-                    Console.WriteLine($"Min winning time {minWinningTime}");
-
-                    break;
+                    binarySearchUpper = mid;
+                }
+                else
+                {
+                    minWinningTime = mid + 1;
                 }
             }
 
