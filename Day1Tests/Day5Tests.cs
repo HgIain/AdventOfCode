@@ -37,5 +37,14 @@ namespace UnitTests
             Assert.AreEqual(46, result);
         }
 
+        [TestMethod]
+        public void TestMinimumSeedLocationv2FullData()
+        {
+            var seedToLocation = new SeedToLocation("Day5Input.txt");
+            var result = seedToLocation.Process(true);
+
+            Assert.AreEqual(136096660, result);
+        }
+
     }
 }

@@ -10,29 +10,7 @@ namespace Day5
 {
     public class SeedToLocation(string filename)
     {
-        private record RangeMap(long srcStart, long destStart, long length) :IComparable<RangeMap>
-        {
-            public int CompareTo(RangeMap? other)
-            {
-                if(other is null)
-                {
-                    return 1;
-                }
-
-                if (other.srcStart < srcStart)
-                {
-                    return 1;
-                }
-
-                if (other.srcStart >= srcStart + length)
-                {
-                    return -1;
-                }
-
-
-                return 0;
-            }
-        }
+        private record RangeMap(long srcStart, long destStart, long length);
         private record SeedRange(long start, long length);
 
         private readonly List<SeedRange> seeds = [];
@@ -186,23 +164,6 @@ namespace Day5
 
         }
 
-
-        private static long LookupValue(long value, List<RangeMap> rangeMap)
-        {
-            var compareRange = new RangeMap(value, 0, 1);
-
-            int index = rangeMap.BinarySearch(compareRange);
-
-            if (index < 0)
-            {
-                return value;
-            }
-
-            var range = rangeMap[index];
-
-            return range.destStart + (value - range.srcStart);
-        }
-
         public long Process(bool useSeedRanges = false)
         {
             var stopwatch = new Stopwatch();
@@ -234,30 +195,28 @@ namespace Day5
 
         private long ProcessSeedRange(SeedRange seedRange)
         {
-            ConcurrentBag<long> allMins = [];
+            long min = long.MaxValue;
+            long index = seedRange.start;
+            while(index < seedRange.start + seedRange.length)
+            {
+                var offset = GetLengthAndOffsetForIndex(combined, index);
 
-            Parallel.For<long> ( 0, seedRange.length, () => long.MaxValue,
-                (i, loop, localMin) =>
+                var value = index + offset.offset;
+                if (value < min)
                 {
-                    long value = seedRange.start + i;
-
-                    value = LookupValue(value, combined);
-
-                    if (value < localMin)
-                    {
-                        localMin = value;
-                    }
-
-                    return localMin;
-                },
-                (x) =>
-                {
-                    allMins.Add(x);
+                    min = value;
                 }
-            );
 
+                if(offset.length == 0)
+                {
+                    // off the end of the remapper, we're done
+                    break;
+                }
+                // skip over lots of values if we can
+                index += offset.length;
+            }
 
-            return allMins.Min();
+            return min;
         }
     }
 }
