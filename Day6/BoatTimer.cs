@@ -67,28 +67,10 @@ namespace Day6
 
         private static long CalculateWinningTimes(BoatRecord boatRecord)
         {
-            //winning times will be a curve, so need the first and last
-            // approximate the first by dividing the distance by the time
-
-            long minWinningTime = boatRecord.distance / boatRecord.time;
-            long binarySearchUpper = boatRecord.time / 2;
-
-            Console.WriteLine($"First order approximation of min winning time: {minWinningTime}");
-
-            // binary search to find the min winning time
-            while(minWinningTime < binarySearchUpper)
-            {
-                var mid = (minWinningTime + binarySearchUpper) / 2;
-
-                if (mid * (boatRecord.time - mid) > boatRecord.distance)
-                {
-                    binarySearchUpper = mid;
-                }
-                else
-                {
-                    minWinningTime = mid + 1;
-                }
-            }
+            // solve the quadratic equation
+            var minWinningTimeFloat = (boatRecord.time - Math.Sqrt(boatRecord.time * boatRecord.time - 4 * boatRecord.distance))/2;
+            // exact match is a fail, so make sure to take the next highest integer
+            long minWinningTime = (long)Math.Floor(minWinningTimeFloat + 1);
 
             // the curve will be symmetrical, so the max winning time is the time - min winning time
             var maxWinningTime = boatRecord.time - minWinningTime;

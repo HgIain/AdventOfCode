@@ -2,5 +2,5 @@
 
 using Day6;
 
-var boatTimer = new BoatTimer("Day6Input.txt");
-boatTimer.Process(true);
+var boatTimer = new BoatTimer("Day6TestInput.txt");
+boatTimer.Process(false);
