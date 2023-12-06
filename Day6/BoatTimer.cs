@@ -61,14 +61,17 @@ namespace Day6
             return winningTimes;
         }
 
-        private long CalculateWinningTimes(BoatRecord boatRecord)
+        private static long CalculateWinningTimes(BoatRecord boatRecord)
         {
             //winning times will be a curve, so need the first and last
             // approximate the first by dividing the distance by the time
 
             long minWinningTime = boatRecord.distance / boatRecord.time;
-            long maxWinningTime = boatRecord.time - minWinningTime;
 
+            Console.WriteLine($"First order approximation of min winning time: {minWinningTime}");
+
+            // find the actual min winning time by iterating through the times
+            // could binary search, but this is easier
             for (long i = minWinningTime; i<boatRecord.time; i++)
             {
                 if(i * (boatRecord.time - i) > boatRecord.distance)
@@ -81,18 +84,8 @@ namespace Day6
                 }
             }
 
-            for (long i = maxWinningTime; i >= 0; i--)
-            {
-                if (i * (boatRecord.time - i) > boatRecord.distance)
-                {
-                    maxWinningTime = i;
-
-                    Console.WriteLine($"Min winning time {maxWinningTime}");
-
-                    break;
-                }
-            }
-
+            // the curve will be symmetrical, so the max winning time is the time - min winning time
+            var maxWinningTime = boatRecord.time - minWinningTime;
             long possibleWinningTimes = maxWinningTime - minWinningTime + 1;
 
             Console.WriteLine($"Winning possibilities {possibleWinningTimes}");
