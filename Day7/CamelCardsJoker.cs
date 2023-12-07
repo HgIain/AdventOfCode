@@ -139,11 +139,6 @@ namespace Day7
             }
         }
 
-        private int CompareHands(Hand hand1, Hand hand2)
-        {
-            return 0;
-        }
-
         private readonly List<Hand> hands = [];
 
         public int Process()
