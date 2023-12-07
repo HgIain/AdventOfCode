@@ -14,15 +14,15 @@ namespace Day7.Tests
         [TestMethod()]
         public void ProcessTest()
         {
-            var camelCards = new CamelCards("Day7TestInput.txt");
-            var result = camelCards.Process();
+            var camelCards = new CamelCardsJoker("Day7TestInput.txt");
+            var result = camelCards.Process(false);
             Assert.AreEqual(6440, result);
         }
         [TestMethod()]
         public void ProcessTestFullData()
         {
-            var camelCards = new CamelCards("Day7Input.txt");
-            var result = camelCards.Process();
+            var camelCards = new CamelCardsJoker("Day7Input.txt");
+            var result = camelCards.Process(false);
             Assert.AreEqual(252656917, result);
         }
         [TestMethod()]

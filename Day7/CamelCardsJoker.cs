@@ -21,9 +21,10 @@ namespace Day7
 
         static private int GetValueForCard(char card) => card switch
         {
-            'J' => 0,
+            '_' => 0,
             >= '2' and <= '9' => card - '2' + 1,
             'T' => 10,
+            'J' => 11,
             'Q' => 12,
             'K' => 13,
             'A' => 14,
@@ -43,9 +44,9 @@ namespace Day7
 
             foreach(var card in cardArray)
             {
-                if (analysis.ContainsKey(card))
+                if (analysis.TryGetValue(card, out int count))
                 {
-                    analysis[card]++;
+                    analysis[card] = ++count;
                 }
                 else
                 {
@@ -53,7 +54,7 @@ namespace Day7
                 }
             }
 
-            int jokerCount = analysis.TryGetValue('J', out int value) ? value : 0;
+            int jokerCount = analysis.TryGetValue('_', out int value) ? value : 0;
 
             if(jokerCount == 5)
             {
@@ -61,13 +62,16 @@ namespace Day7
                 return HandType.FiveOfAKind;
             }
 
-            analysis.Remove('J');
+            if (jokerCount > 0)
+            {
+                analysis.Remove('_');
 
-            // loop over the dictionary to find the most common card
-            var keyOfMaxValue = analysis.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
+                // loop over the dictionary to find the most common card
+                var keyOfMaxValue = analysis.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
 
-            // add the jokers to the most common card
-            analysis[keyOfMaxValue] += jokerCount;
+                // add the jokers to the most common card
+                analysis[keyOfMaxValue] += jokerCount;
+            }
 
             switch(analysis.Count)
             {
@@ -141,7 +145,7 @@ namespace Day7
 
         private readonly List<Hand> hands = [];
 
-        public int Process()
+        public int Process(bool jokersWild = true)
         {
             var text = File.ReadAllLines(filename);
 
@@ -156,7 +160,16 @@ namespace Day7
                     throw new Exception("Invalid line");
                 }
 
-                var hand = new Hand(split[0], int.Parse(split[1]), GetHandType(split[0]));
+                var cards = split[0];
+
+                if(jokersWild)
+                {
+                    // replace all J with _ to make jokers wild
+                    // this allows us to use the same code for both parts
+                    cards = cards.Replace('J', '_');
+                }
+
+                var hand = new Hand(cards, int.Parse(split[1]), GetHandType(cards));
                 hands.Add(hand);
             }
 
