@@ -38,13 +38,11 @@ namespace Day7
                 throw new Exception("Invalid hand");
             }
 
-            var cardArray = cards.OrderBy(c => c).ToList();
-
             var analysis = new Dictionary<char, int>();
 
             int jokerCount = 0;
 
-            foreach (var card in cardArray)
+            foreach (var card in cards)
             {
                 if(card == '_')
                 {
