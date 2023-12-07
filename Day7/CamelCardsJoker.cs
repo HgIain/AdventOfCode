@@ -32,6 +32,11 @@ namespace Day7
 
         private static HandType GetHandType(string cards)
         {
+            if(cards.Length != 5)
+            {
+                throw new Exception("Invalid hand");
+            }
+
             var cardArray = cards.OrderBy(c => c).ToList();
 
             var analysis = new Dictionary<char, int>();
@@ -58,51 +63,33 @@ namespace Day7
 
             analysis.Remove('J');
 
-            int maxCount = 0;
-            char mostKey = ' ';
-
-            //sort the analysis by number of cards
-            foreach (var card in analysis)
-            {
-                if (card.Value > maxCount)
-                {
-                    maxCount = card.Value;
-                    mostKey = card.Key;
-                }
-            }
+            // loop over the dictionary to find the most common card
+            var keyOfMaxValue = analysis.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
 
             // add the jokers to the most common card
-            analysis[mostKey] += jokerCount;
+            analysis[keyOfMaxValue] += jokerCount;
 
             switch(analysis.Count)
             {
                 case 1:
                     return HandType.FiveOfAKind;
                 case 2:
-                    if(analysis.Values.Any(v => v == 4))
+                    if (analysis.Values.Any(v => v == 4))
                     {
                         return HandType.FourOfAKind;
                     }
-                    else if(analysis.Values.Any(v => v == 3))
-                    {
-                        return HandType.FullHouse;
-                    }
                     else
                     {
-                        throw new Exception("Invalid hand");
+                        return HandType.FullHouse;
                     }
                 case 3:
                     if(analysis.Values.Any(v => v == 3))
                     {
                         return HandType.ThreeOfAKind;
                     }
-                    else if(analysis.Values.Any(v => v == 2))
-                    {
-                        return HandType.TwoPairs;
-                    }
                     else
                     {
-                        throw new Exception("Invalid hand");
+                        return HandType.TwoPairs;
                     }
                 case 4:
                     return HandType.OnePair;
