@@ -42,8 +42,15 @@ namespace Day7
 
             var analysis = new Dictionary<char, int>();
 
-            foreach(var card in cardArray)
+            int jokerCount = 0;
+
+            foreach (var card in cardArray)
             {
+                if(card == '_')
+                {
+                    jokerCount++;
+                }
+
                 if (analysis.TryGetValue(card, out int count))
                 {
                     analysis[card] = ++count;
@@ -53,8 +60,6 @@ namespace Day7
                     analysis[card] = 1;
                 }
             }
-
-            int jokerCount = analysis.TryGetValue('_', out int value) ? value : 0;
 
             if(jokerCount == 5)
             {
@@ -70,6 +75,7 @@ namespace Day7
                 var keyOfMaxValue = analysis.Aggregate((x, y) => x.Value > y.Value ? x : y).Key;
 
                 // add the jokers to the most common card
+                // this will give us the best possible hand
                 analysis[keyOfMaxValue] += jokerCount;
             }
 
@@ -143,13 +149,11 @@ namespace Day7
             }
         }
 
-        private readonly List<Hand> hands = [];
-
         public int Process(bool jokersWild = true)
         {
             var text = File.ReadAllLines(filename);
 
-            int total = 0;
+            List<Hand> hands = [];
 
             foreach (var line in text)
             {
@@ -175,10 +179,7 @@ namespace Day7
 
             hands.Sort((a, b) => a.CompareTo(b));
 
-            for(int i = 0; i < hands.Count; i++)
-            {
-                total += hands[i].score * (i + 1);
-            }
+            int total = hands.Select((hand, index) => hand.score * (index + 1)).Sum();
 
             Console.WriteLine($"Total: {total}");
 
