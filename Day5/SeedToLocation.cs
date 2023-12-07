@@ -76,12 +76,8 @@ namespace Day5
                 rangeMaps[i] = [.. rangeMaps[i].OrderBy(c=>c.srcStart)];
             }
 
-            combined = rangeMaps[0];
-
-            for(int i=1; i<rangeMaps.Count; i++)
-            {
-                combined = CombineRanges(combined, rangeMaps[i]);
-            }
+            // smoosh them together
+            combined = rangeMaps.Aggregate((a, b) => CombineRanges(a, b));
 
         }
 
