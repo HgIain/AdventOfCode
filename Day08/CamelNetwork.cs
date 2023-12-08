@@ -11,71 +11,21 @@ namespace Day08
     {
         private record Destinations(string left, string right);
 
-        private readonly Dictionary<string, Destinations> _network = [];
-        private string _directions = "";
 
-        public int Process()
+        private static bool IsOnFinishPosition(string position, bool isSingleMode)
         {
-            string _current = "AAA";
-            int result = 0;
-
-            var lines = File.ReadLines(filename);
-
-            _directions = lines.First();
-
-            lines = lines.Skip(2);
-
-            char[] separators = [' ', '=', '(', ')', ','];
-
-            foreach (var line in lines)
+            if(isSingleMode)
             {
-                var parts = line.Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                if(parts.Length != 3)
-                {
-                    throw new Exception("Invalid line");
-                }
-                var start = parts[0];
-                var left = parts[1];
-                var right = parts[2];
-
-                _network[start] = new Destinations(left, right);
+                return position == "ZZZ";
             }
-
-            var directionsLength = _directions.Length;
-
-            while(_current != "ZZZ")
-            {
-                char direction = _directions[result % directionsLength];
-
-                if(direction == 'L')
-                {
-                    _current = _network[_current].left;
-                }
-                else if(direction == 'R')
-                {
-                    _current = _network[_current].right;
-                }
-                else
-                {
-                    throw new Exception("Invalid direction");
-                }
-
-                result++;
-            }
-
-            Console.WriteLine($"Result: {result}");
-
-            return result;
-        }
-
-        private bool IsOnFinishPosition(string position)
-        {
             return position.EndsWith('Z');
         }
 
-        public ulong ProcessMultiple()
+        public ulong ProcessMultiple(bool bSingleMode = false)
         {
+            Dictionary<string, Destinations> _network = [];
+            string _directions = "";
+
             List<ulong> results = [];
 
             var lines = File.ReadLines(filename);
@@ -115,9 +65,19 @@ namespace Day08
 
                 _network[start] = new Destinations(left, right);
 
-                if(start.EndsWith('A'))
+                if (bSingleMode)
                 {
-                    positions.Add(start);
+                    if (start == "AAA")
+                    {
+                        positions.Add(start);
+                    }
+                }
+                else
+                {
+                    if (start.EndsWith('A'))
+                    {
+                        positions.Add(start);
+                    }
                 }
             }
 
@@ -128,7 +88,7 @@ namespace Day08
                 var position = positions[i];
                 ulong result = 0;
 
-                while (!IsOnFinishPosition(position))
+                while (!IsOnFinishPosition(position, bSingleMode))
                 {
                     int directionIndex = (int)(result % directionsLength);
                     char direction = _directions[directionIndex];

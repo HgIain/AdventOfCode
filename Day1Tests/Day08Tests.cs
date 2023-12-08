@@ -15,24 +15,24 @@ namespace Day08.Tests
         public void ProcessTest()
         {
             var camelNetwork = new CamelNetwork("Day8TestInput.txt");
-            var result = camelNetwork.Process();
-            Assert.AreEqual(2, result);
+            var result = camelNetwork.ProcessMultiple(true);
+            Assert.AreEqual((ulong)2, result);
         }
 
         [TestMethod()]
         public void ProcessTest2()
         {
             var camelNetwork = new CamelNetwork("Day8TestInput2.txt");
-            var result = camelNetwork.Process();
-            Assert.AreEqual(6, result);
+            var result = camelNetwork.ProcessMultiple(true);
+            Assert.AreEqual((ulong)6, result);
         }
 
         [TestMethod()]
         public void ProcessTestFullData()
         {
             var camelNetwork = new CamelNetwork("Day8Input.txt");
-            var result = camelNetwork.Process();
-            Assert.AreEqual(18023, result);
+            var result = camelNetwork.ProcessMultiple(true);
+            Assert.AreEqual((ulong)18023, result);
         }
 
         [TestMethod()]
