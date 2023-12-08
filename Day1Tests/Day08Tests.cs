@@ -34,5 +34,21 @@ namespace Day08.Tests
             var result = camelNetwork.Process();
             Assert.AreEqual(18023, result);
         }
+
+        [TestMethod()]
+        public void ProcessMultiple()
+        {
+            var camelNetwork = new CamelNetwork("Day8TestInput3.txt");
+            var result = camelNetwork.ProcessMultiple();
+            Assert.AreEqual((ulong)6, result);
+        }
+
+        [TestMethod()]
+        public void ProcessMultipleFullData()
+        {
+            var camelNetwork = new CamelNetwork("Day8Input.txt");
+            var result = camelNetwork.ProcessMultiple ();
+            Assert.AreEqual((ulong)14449445933179, result);
+        }
     }
 }
