@@ -36,15 +36,29 @@ namespace Day10
 
         private record Position(int X, int Y);
 
+        private record Pipe(PipeType PipeType, bool Visited);
+
         [AllowNull]
-        private PipeType[,] _pipeMap;
+        private Pipe[,] _pipeMap;
 
         private List<Position> _visited = [];
+
+        private void AddVisited(Position position)
+        {
+            if (_visited.Contains(position))
+            {
+                throw new Exception("Already visited");
+            }
+
+            _visited.Add(position);
+
+            _pipeMap[position.X, position.Y] = _pipeMap[position.X, position.Y] with { Visited = true };
+        }
 
         public int Process(bool getInsideCount = false)
         {
             var lines = System.IO.File.ReadAllLines(filename);
-            _pipeMap = new PipeType[lines[0].Length, lines.Length];
+            _pipeMap = new Pipe[lines[0].Length, lines.Length];
 
             Position startPosition = new (-1, -1);
 
@@ -54,7 +68,7 @@ namespace Day10
                 for(int i = 0; i < chars.Length; i++)
                 {
                     PipeType pipeType = GetPipeTypeForLetter(chars[i]);
-                    _pipeMap[i, j] = pipeType;
+                    _pipeMap[i, j] = new(pipeType, false);
 
                     if (pipeType == PipeType.Start)
                     {
@@ -70,8 +84,8 @@ namespace Day10
 
             var position = GetFirstConnection(startPosition);
 
-            _visited.Add(startPosition);
-            _visited.Add(position);
+            AddVisited(startPosition);
+            AddVisited(position);
 
             while (_visited[^1] != startPosition)
             {
@@ -82,7 +96,7 @@ namespace Day10
                     break;
                 }
 
-                _visited.Add(nextPosition);
+                AddVisited(nextPosition);
             }
 
             if (!getInsideCount)
@@ -115,7 +129,7 @@ namespace Day10
                 return false;
             }
 
-            if (_visited.Contains(position))
+            if (_pipeMap[position.X,position.Y].Visited)
             {
                 // the position is on the path, not inside
                 return false;
@@ -133,10 +147,10 @@ namespace Day10
                 if (!currentlyIntersecting)
                 {
                     var testpos = position with { X = i };
-                    if (_visited.Contains(testpos))
+                    if (_pipeMap[testpos.X, testpos.Y].Visited)
                     {
                         //intersectionCount++;
-                        var pipeType = _pipeMap[i, position.Y];
+                        var pipeType = _pipeMap[i, position.Y].PipeType;
 
                         if (pipeType == PipeType.LeftRight)
                         {
@@ -161,7 +175,7 @@ namespace Day10
                 }
                 else
                 {
-                    var pipeType = _pipeMap[i, position.Y];
+                    var pipeType = _pipeMap[i, position.Y].PipeType;
                     if(pipeType == PipeType.UpRight)
                     {
                         currentlyIntersecting = false;
@@ -190,7 +204,7 @@ namespace Day10
 
         (Position one, Position two) GetConnections(Position position)
         {
-            var positionType = _pipeMap[position.X, position.Y];
+            var positionType = _pipeMap[position.X, position.Y].PipeType;
 
             switch(positionType)
             {
@@ -255,7 +269,7 @@ namespace Day10
                 return false;
             }
 
-            var pipeType = _pipeMap[from.X, from.Y];
+            var pipeType = _pipeMap[from.X, from.Y].PipeType;
 
             switch(pipeType)
             {
