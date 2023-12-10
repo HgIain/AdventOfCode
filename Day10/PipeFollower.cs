@@ -87,7 +87,7 @@ namespace Day10
             AddVisited(startPosition);
             AddVisited(position);
 
-            while (_visited[^1] != startPosition)
+            while (true)
             {
                 var nextPosition = GetNextConnection(_visited[^2], _visited[^1]);
 
@@ -108,31 +108,18 @@ namespace Day10
 
             for(int j = 0; j < _pipeMap.GetLength(1); j++)
             {
-                for (int i = 0; i < _pipeMap.GetLength(0); i++)
-                {
-                    if (IsInside(new(i,j)))
-                    {
-                        insideCount++;
-                        Console.WriteLine($"Inside: {i},{j}");
-                    }
-                }
+                insideCount += GetLineInsideCount(j);
             }
 
             return insideCount;
         }
 
-        bool IsInside(Position position)
+        int GetLineInsideCount(int y)
         {
-            if (position.X == 0 || position.Y == 0 || position.X == _pipeMap.GetLength(0) - 1 || position.Y == _pipeMap.GetLength(1) - 1)
+            if (y == 0 || y == _pipeMap.GetLength(1) - 1)
             {
                 // on the edge, can't be inside
-                return false;
-            }
-
-            if (_pipeMap[position.X,position.Y].Visited)
-            {
-                // the position is on the path, not inside
-                return false;
+                return 0;
             }
 
             // project a ray from the position to any edge of the map
@@ -141,42 +128,50 @@ namespace Day10
             int intersectionCount = 0;
             bool currentlyIntersecting = false;
             bool enteredUp = false;
+            int insideCount = 0;
 
-            for (int i = position.X - 1; i >= 0; i--)
+            for (int i = 0; i <_pipeMap.GetLength(0); i++)
             {
                 if (!currentlyIntersecting)
                 {
-                    var testpos = position with { X = i };
-                    if (_pipeMap[testpos.X, testpos.Y].Visited)
+                    if (_pipeMap[i, y].Visited)
                     {
                         //intersectionCount++;
-                        var pipeType = _pipeMap[i, position.Y].PipeType;
+                        var pipeType = _pipeMap[i, y].PipeType;
 
                         if (pipeType == PipeType.LeftRight)
                         {
                             throw new Exception("Unexpected pipe type");
                         }
 
-                        if (pipeType == PipeType.UpLeft)
+                        if (pipeType == PipeType.UpRight)
                         {
                             enteredUp = true;
                             currentlyIntersecting = true;
                         }
-                        else if (pipeType == PipeType.DownLeft)
+                        else if (pipeType == PipeType.DownRight)
                         {
                             enteredUp = false;
                             currentlyIntersecting = true;
                         }
-                        else
+                        else if(pipeType == PipeType.UpDown)
                         {
                             intersectionCount++;
                         }
+                        else
+                        {
+                            throw new Exception("Unexpected pipe type");
+                        }
+                    }
+                    else if(intersectionCount %2 == 1)
+                    {
+                        insideCount++;
                     }
                 }
                 else
                 {
-                    var pipeType = _pipeMap[i, position.Y].PipeType;
-                    if(pipeType == PipeType.UpRight)
+                    var pipeType = _pipeMap[i, y].PipeType;
+                    if(pipeType == PipeType.UpLeft)
                     {
                         currentlyIntersecting = false;
                         if(!enteredUp)
@@ -184,7 +179,7 @@ namespace Day10
                             intersectionCount++;
                         }
                     }
-                    else if(pipeType == PipeType.DownRight)
+                    else if(pipeType == PipeType.DownLeft)
                     {
                         currentlyIntersecting = false;
                         if(enteredUp)
@@ -199,7 +194,7 @@ namespace Day10
                 }
             }
 
-            return intersectionCount % 2 == 1;
+            return insideCount;
         }   
 
         (Position one, Position two) GetConnections(Position position)
@@ -251,15 +246,63 @@ namespace Day10
         {
             Position[] positions = [new(start.X, start.Y - 1), new(start.X, start.Y + 1), new(start.X - 1, start.Y), new(start.X + 1, start.Y)];
 
+            List<Position> connections = new List<Position>();
+
             foreach(var position in positions)
             {
                 if(CheckConnection(position, start))
                 {
-                    return position;
+                    connections.Add(position);
                 }
             }
 
-            throw new Exception("Failed to find connection");
+            if (connections.Count != 2)
+            {
+                throw new Exception("Invalid pipes");
+            }
+
+            PipeType pipeType = PipeType.None;
+
+            if (connections[0].X == connections[1].X)
+            {
+                pipeType = PipeType.UpDown;
+            }
+            else if (connections[0].Y == connections[1].Y)
+            {
+                pipeType = PipeType.LeftRight;
+            }
+            else if (connections[0].X < start.X || connections[1].X < start.X)
+            {
+                if (connections[0].Y < start.Y || connections[1].Y < start.Y)
+                {
+                    pipeType = PipeType.UpLeft;
+                }
+                else
+                {
+                    pipeType = PipeType.DownLeft;
+                }
+            }
+            else
+            {
+                if (connections[0].Y < start.Y || connections[1].Y < start.Y)
+                {
+                    pipeType = PipeType.UpRight;
+                }
+                else
+                {
+                    pipeType = PipeType.DownRight;
+                }
+            }
+
+
+            if(pipeType == PipeType.None)
+            {
+                throw new Exception("Invalid pipes");
+            }
+
+            _pipeMap[start.X, start.Y] = _pipeMap[start.X, start.Y] with { PipeType = pipeType };
+
+            return connections[0];
         }
 
         bool CheckConnection(Position from, Position to)
