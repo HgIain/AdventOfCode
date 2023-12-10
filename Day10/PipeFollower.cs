@@ -41,7 +41,7 @@ namespace Day10
         [AllowNull]
         private Pipe[,] _pipeMap;
 
-        private List<Position> _visited = [];
+        private readonly List<Position> _visited = [];
 
         private void AddVisited(Position position)
         {
@@ -201,28 +201,18 @@ namespace Day10
         {
             var positionType = _pipeMap[position.X, position.Y].PipeType;
 
-            switch(positionType)
+            return positionType switch
             {
-                case PipeType.Start:
-                    throw new Exception("Unexpected pipe type");
-                case PipeType.LeftRight:
-                    return (new Position(position.X - 1, position.Y), new Position(position.X + 1, position.Y));
-                case PipeType.UpDown:
-                    return (new Position(position.X, position.Y - 1), new Position(position.X, position.Y + 1));
-                case PipeType.UpLeft:
-                    return (new Position(position.X - 1, position.Y), new Position(position.X, position.Y - 1));
-                case PipeType.UpRight:
-                    return (new Position(position.X + 1, position.Y), new Position(position.X, position.Y - 1));
-                case PipeType.DownLeft:
-                    return (new Position(position.X - 1, position.Y), new Position(position.X, position.Y + 1));
-                case PipeType.DownRight:
-                    return (new Position(position.X + 1, position.Y), new Position(position.X, position.Y + 1));
-                case PipeType.None:
-                    throw new Exception("Unexpected pipe type");
-                default:
-                    throw new Exception("Unexpected pipe type");
-            }
-
+                PipeType.Start => throw new Exception("Unexpected pipe type"),
+                PipeType.LeftRight => (new Position(position.X - 1, position.Y), new Position(position.X + 1, position.Y)),
+                PipeType.UpDown => (new Position(position.X, position.Y - 1), new Position(position.X, position.Y + 1)),
+                PipeType.UpLeft => (new Position(position.X - 1, position.Y), new Position(position.X, position.Y - 1)),
+                PipeType.UpRight => (new Position(position.X + 1, position.Y), new Position(position.X, position.Y - 1)),
+                PipeType.DownLeft => (new Position(position.X - 1, position.Y), new Position(position.X, position.Y + 1)),
+                PipeType.DownRight => (new Position(position.X + 1, position.Y), new Position(position.X, position.Y + 1)),
+                PipeType.None => throw new Exception("Unexpected pipe type"),
+                _ => throw new Exception("Unexpected pipe type"),
+            };
             throw new Exception("Failed to find connection");
         }
 
@@ -246,7 +236,7 @@ namespace Day10
         {
             Position[] positions = [new(start.X, start.Y - 1), new(start.X, start.Y + 1), new(start.X - 1, start.Y), new(start.X + 1, start.Y)];
 
-            List<Position> connections = new List<Position>();
+            List<Position> connections = [];
 
             foreach(var position in positions)
             {
@@ -314,27 +304,18 @@ namespace Day10
 
             var pipeType = _pipeMap[from.X, from.Y].PipeType;
 
-            switch(pipeType)
+            return pipeType switch
             {
-                case PipeType.Start:
-                    throw new Exception("Unexpected pipe type");
-                case PipeType.LeftRight:
-                    return (to.X == from.X - 1 || to.X == from.X + 1);
-                case PipeType.UpDown:
-                    return (to.Y == from.Y - 1 || to.Y == from.Y + 1);
-                case PipeType.UpLeft:
-                    return (to.X == from.X - 1 || to.Y == from.Y - 1);
-                case PipeType.UpRight:
-                    return (to.X == from.X + 1 || to.Y == from.Y - 1);
-                case PipeType.DownLeft:
-                    return (to.X == from.X - 1 || to.Y == from.Y + 1);
-                case PipeType.DownRight:
-                    return (to.X == from.X + 1 || to.Y == from.Y + 1);
-                case PipeType.None:
-                    return false;
-                default:
-                    throw new Exception("Unexpected pipe type");
-            }
+                PipeType.Start => throw new Exception("Unexpected pipe type"),
+                PipeType.LeftRight => (to.X == from.X - 1 || to.X == from.X + 1),
+                PipeType.UpDown => (to.Y == from.Y - 1 || to.Y == from.Y + 1),
+                PipeType.UpLeft => (to.X == from.X - 1 || to.Y == from.Y - 1),
+                PipeType.UpRight => (to.X == from.X + 1 || to.Y == from.Y - 1),
+                PipeType.DownLeft => (to.X == from.X - 1 || to.Y == from.Y + 1),
+                PipeType.DownRight => (to.X == from.X + 1 || to.Y == from.Y + 1),
+                PipeType.None => false,
+                _ => throw new Exception("Unexpected pipe type"),
+            };
         }
     }
 }
