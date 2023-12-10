@@ -31,7 +31,7 @@ namespace Day10
             '7' => PipeType.DownLeft,
             'F' => PipeType.DownRight,
             '.' => PipeType.None,
-            _ => throw new Exception("Unexpected card")
+            _ => throw new Exception("Unexpected letter")
         };
 
         private record Position(int X, int Y);
@@ -41,7 +41,7 @@ namespace Day10
 
         private List<Position> _visited = [];
 
-        public int Process()
+        public int Process(bool getInsideCount = false)
         {
             var lines = System.IO.File.ReadAllLines(filename);
             _pipeMap = new PipeType[lines[0].Length, lines.Length];
@@ -79,14 +79,114 @@ namespace Day10
 
                 if (nextPosition == startPosition)
                 {
-                    return _visited.Count / 2;
+                    break;
                 }
 
                 _visited.Add(nextPosition);
             }
 
-            return 0;
+            if (!getInsideCount)
+            {
+                return _visited.Count / 2;
+            }
+
+            var insideCount = 0;
+
+            for(int j = 0; j < _pipeMap.GetLength(1); j++)
+            {
+                for (int i = 0; i < _pipeMap.GetLength(0); i++)
+                {
+                    if (IsInside(new(i,j)))
+                    {
+                        insideCount++;
+                        Console.WriteLine($"Inside: {i},{j}");
+                    }
+                }
+            }
+
+            return insideCount;
         }
+
+        bool IsInside(Position position)
+        {
+            if (position.X == 0 || position.Y == 0 || position.X == _pipeMap.GetLength(0) - 1 || position.Y == _pipeMap.GetLength(1) - 1)
+            {
+                // on the edge, can't be inside
+                return false;
+            }
+
+            if (_visited.Contains(position))
+            {
+                // the position is on the path, not inside
+                return false;
+            }
+
+            // project a ray from the position to any edge of the map
+            // if the ray intersects an odd number of pipes, the position is inside
+            // if the ray intersects an even number of pipes, the position is outside
+            int intersectionCount = 0;
+            bool currentlyIntersecting = false;
+            bool enteredUp = false;
+
+            for (int i = position.X - 1; i >= 0; i--)
+            {
+                if (!currentlyIntersecting)
+                {
+                    var testpos = position with { X = i };
+                    if (_visited.Contains(testpos))
+                    {
+                        //intersectionCount++;
+                        var pipeType = _pipeMap[i, position.Y];
+
+                        if (pipeType == PipeType.LeftRight)
+                        {
+                            throw new Exception("Unexpected pipe type");
+                        }
+
+                        if (pipeType == PipeType.UpLeft)
+                        {
+                            enteredUp = true;
+                            currentlyIntersecting = true;
+                        }
+                        else if (pipeType == PipeType.DownLeft)
+                        {
+                            enteredUp = false;
+                            currentlyIntersecting = true;
+                        }
+                        else
+                        {
+                            intersectionCount++;
+                        }
+                    }
+                }
+                else
+                {
+                    var pipeType = _pipeMap[i, position.Y];
+                    if(pipeType == PipeType.UpRight)
+                    {
+                        currentlyIntersecting = false;
+                        if(!enteredUp)
+                        {
+                            intersectionCount++;
+                        }
+                    }
+                    else if(pipeType == PipeType.DownRight)
+                    {
+                        currentlyIntersecting = false;
+                        if(enteredUp)
+                        {
+                            intersectionCount++;
+                        }
+                    }
+                    else if(pipeType != PipeType.LeftRight)
+                    {
+                        throw new Exception("Unexpected pipe type");
+                    }
+                }
+            }
+
+            return intersectionCount % 2 == 1;
+        }   
 
         (Position one, Position two) GetConnections(Position position)
         {
