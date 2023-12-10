@@ -45,11 +45,6 @@ namespace Day10
 
         private void AddVisited(Position position)
         {
-            if (_visited.Contains(position))
-            {
-                throw new Exception("Already visited");
-            }
-
             _visited.Add(position);
 
             _pipeMap[position.X, position.Y] = _pipeMap[position.X, position.Y] with { Visited = true };
