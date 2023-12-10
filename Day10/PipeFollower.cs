@@ -41,11 +41,14 @@ namespace Day10
         [AllowNull]
         private Pipe[,] _pipeMap;
 
-        private readonly List<Position> _visited = [];
+        private readonly HashSet<Position> _visited = [];
 
         private void AddVisited(Position position)
         {
-            _visited.Add(position);
+            if(!_visited.Add(position))
+            {
+                throw new Exception("Already visited");
+            }
 
             _pipeMap[position.X, position.Y] = _pipeMap[position.X, position.Y] with { Visited = true };
         }
@@ -81,10 +84,11 @@ namespace Day10
 
             AddVisited(startPosition);
             AddVisited(position);
+            var prevPosition = startPosition;
 
             while (true)
             {
-                var nextPosition = GetNextConnection(_visited[^2], _visited[^1]);
+                var nextPosition = GetNextConnection(prevPosition, position);
 
                 if (nextPosition == startPosition)
                 {
@@ -92,6 +96,8 @@ namespace Day10
                 }
 
                 AddVisited(nextPosition);
+                prevPosition = position;
+                position = nextPosition;
             }
 
             if (!getInsideCount)
