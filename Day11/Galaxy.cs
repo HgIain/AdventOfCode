@@ -35,17 +35,17 @@ namespace Day11
 
             for(int i = 0; i< galaxies.Count; i++)
             {
-                var galaxy1 = galaxies[i];
+                (var galaxy1x, var galaxy1y) = galaxies[i];
 
                 for (int j = i + 1; j < galaxies.Count; j++)
                 {
-                    var galaxy2 = galaxies[j];
+                    (var galaxy2x,var galaxy2y) = galaxies[j];
 
-                    int minX = Math.Min(galaxy1.x, galaxy2.x);
-                    int maxX = Math.Max(galaxy1.x, galaxy2.x);
+                    int minX = Math.Min(galaxy1x, galaxy2x);
+                    int maxX = Math.Max(galaxy1x, galaxy2x);
                     // list is ordered by y
-                    int minY = galaxy1.y;
-                    int maxY = galaxy2.y;
+                    int minY = galaxy1y;
+                    int maxY = galaxy2y;
 
                     total += (maxX - minX) + (maxY - minY);
 
