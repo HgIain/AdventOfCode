@@ -23,5 +23,20 @@ namespace Day12.Tests
             var result = OperationalSpring.GetVariants("Day12Input.txt", 1);
             Assert.AreEqual(7169, result);
         }
+
+        [TestMethod()]
+        public void GetExpandedVariantsTest()
+        {
+            var result = OperationalSpring.GetVariants("Day12TestInput.txt", 5);
+            Assert.AreEqual(525152, result);
+        }
+#if false
+        [TestMethod()]
+        public void GetExpandedVariantsTestFullData()
+        {
+            var result = OperationalSpring.GetVariants("Day12Input.txt", 5);
+            Assert.AreEqual(7169, result);
+        }
+#endif
     }
 }

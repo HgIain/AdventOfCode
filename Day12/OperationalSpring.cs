@@ -29,15 +29,12 @@ namespace Day12
 
         public static BigInteger AddBits(BigInteger mask, int offset, int length)
         {
-            for (int i = 0; i < length; i++)
-            {
-                mask |= ((ulong)1 << (offset + i));
-            }
+            mask |= GetBitmask(length) << offset;
 
             return mask;
         }
 
-        public static void PrintMask(BigInteger mask, int length = 64)
+        public static void PrintMask(BigInteger mask, int length = 128)
         {
             for (int i = 0; i < length; i++)
             {
@@ -53,13 +50,42 @@ namespace Day12
             Console.WriteLine();
         }
 
+        static private BigInteger[] _cache = [];
 
-        static public long CheckVariantLevel(int level, List<int> runs, BigInteger andMask, BigInteger orMask, BigInteger currMask, int startingOffset, int maxLength)
+        static private BigInteger GetBitmask(int bits)
+        {
+            return _cache[bits];
+        }
+
+        static bool CheckMask(BigInteger currMask, BigInteger andMask, BigInteger orMask, int bitLength)
+        {
+            BigInteger bitmask = GetBitmask(bitLength);
+
+            //currMask &= bitmask;
+            //andMask &= bitmask;
+            //orMask &= bitmask;
+
+
+            if ((andMask & currMask) != (andMask&bitmask))
+            {
+                return false;
+            }
+
+            if ((orMask & currMask) != currMask)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        static public long CheckVariantLevel(int level, List<int> runs, BigInteger andMask, BigInteger orMask, BigInteger currMask, int startingOffset, int maxLength, List<int> remainingTotals)
         {
             long total = 0;
             int run = runs[level];
+            int remainingTotal = remainingTotals[level];
 
-            int biggestOffset = maxLength - startingOffset - run + 1;
+            int biggestOffset = maxLength - startingOffset - run + 1 - remainingTotal;
 
             if (level == runs.Count - 1)
             {
@@ -85,11 +111,19 @@ namespace Day12
             }
             else
             {
+
+
                 for (int i = 0; i < biggestOffset; i++)
                 {
                     BigInteger newMask = AddBits(currMask, startingOffset + i, run);
 
-                    total += CheckVariantLevel(level + 1, runs, andMask, orMask, newMask, startingOffset + i + run + 1, maxLength);
+                    if (!CheckMask(newMask, andMask, orMask, startingOffset + i + run))
+                    {
+                        // early out
+                        continue;
+                    }
+
+                    total += CheckVariantLevel(level + 1, runs, andMask, orMask, newMask, startingOffset + i + run + 1, maxLength, remainingTotals);
                 }
             }
 
@@ -102,11 +136,28 @@ namespace Day12
 
             long total = 0;
 
+            int maxBits = 512;
+
+            _cache = new BigInteger[maxBits];
+
+            BigInteger mask = 0;
+
+            for (int i = 0; i < maxBits; i++)
+            {
+                _cache[i] = mask;
+                mask |= ((BigInteger)1 << (i));
+            }
+
+#if false
+            Parallel.ForEach(lines, line =>
+#else
             foreach (var line in lines)
+#endif
             {
                 var parts = line.Split([' ', ',']);
 
                 List<int> runs = [];
+                List<int> remainingTotal = [];
                 var copyRuns = parts.Skip(1).Select(x => int.Parse(x));
 
                 var source = parts[0];
@@ -143,16 +194,27 @@ namespace Day12
                         }
                     }
 
-                    PrintMask(andMask);
-                    PrintMask(orMask);
+                    //PrintMask(andMask,128);
+                    //PrintMask(orMask,128);
                 }
 
-                long thisTotal = CheckVariantLevel(0, runs, andMask, orMask, 0, 0, (source.Length * expansionFactor) + expansionFactor - 1);
+                for(int i = 0; i<runs.Count - 1;i++)
+                {
+                    var skipRuns = runs.Skip(i + 1);
+                    var run = skipRuns.Sum(c => c) + skipRuns.Count();
+                    remainingTotal.Add(run);
+                }
+                remainingTotal.Add(0);
+
+                long thisTotal = CheckVariantLevel(0, runs, andMask, orMask, 0, 0, (source.Length * expansionFactor) + expansionFactor - 1, remainingTotal);
 
                 Console.WriteLine($"Variant total {thisTotal}");
 
                 total += thisTotal;
             }
+#if false
+            );
+#endif
             Console.WriteLine($"Total {total}");
 
             return total;
