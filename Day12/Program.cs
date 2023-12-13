@@ -1,3 +1,3 @@
 ﻿using Day12;
 
-OperationalSpring.GetVariants("Day12Input.txt");
+OperationalSpring.GetVariants("Day12TestInput.txt");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace Day12
             _ => throw new Exception("Unexpected spring state")
         };
 
-        public static ulong AddBits(ulong mask, int offset, int length)
+        public static BigInteger AddBits(BigInteger mask, int offset, int length)
         {
             for (int i = 0; i < length; i++)
             {
@@ -36,11 +37,11 @@ namespace Day12
             return mask;
         }
 
-        public static void PrintMask(ulong mask, int length = 32)
+        public static void PrintMask(BigInteger mask, int length = 64)
         {
             for (int i = 0; i < length; i++)
             {
-                if ((mask & ((ulong)1 << i)) != 0)
+                if ((mask & (BigInteger)((BigInteger)1 << i)) != 0)
                 {
                     Console.Write("1");
                 }
@@ -53,7 +54,7 @@ namespace Day12
         }
 
 
-        static public long CheckVariantLevel(int level, List<int> runs, ulong andMask, ulong orMask, ulong currMask, int startingOffset, int maxLength)
+        static public long CheckVariantLevel(int level, List<int> runs, BigInteger andMask, BigInteger orMask, BigInteger currMask, int startingOffset, int maxLength)
         {
             long total = 0;
             int run = runs[level];
@@ -64,7 +65,11 @@ namespace Day12
             {
                 for (int i = 0; i < biggestOffset; i++)
                 {
-                    ulong newMask = AddBits(currMask, startingOffset + i, run);
+                    BigInteger newMask = AddBits(currMask, startingOffset + i, run);
+
+                    //PrintMask(newMask);
+                    //PrintMask(andMask);
+                    //PrintMask(orMask);
 
                     if ((andMask & newMask) != andMask)
                     {
@@ -82,7 +87,7 @@ namespace Day12
             {
                 for (int i = 0; i < biggestOffset; i++)
                 {
-                    ulong newMask = AddBits(currMask, startingOffset + i, run);
+                    BigInteger newMask = AddBits(currMask, startingOffset + i, run);
 
                     total += CheckVariantLevel(level + 1, runs, andMask, orMask, newMask, startingOffset + i + run + 1, maxLength);
                 }
@@ -91,7 +96,7 @@ namespace Day12
             return total;
         }
 
-        static public long GetVariants(string filename)
+        static public long GetVariants(string filename, int expansionFactor = 5)
         {
             var lines = System.IO.File.ReadAllLines(filename);
 
@@ -101,36 +106,48 @@ namespace Day12
             {
                 var parts = line.Split([' ', ',']);
 
-                var runs = parts.Skip(1).Select(x => int.Parse(x)).ToList();
-                var totalWorking = runs.Sum();
+                List<int> runs = [];
+                var copyRuns = parts.Skip(1).Select(x => int.Parse(x));
 
                 var source = parts[0];
 
-                if(source.Length > 64)
+                BigInteger andMask = 0;
+                BigInteger orMask = 0;
+
+                int currentIndex = 0;
+
+                for (int j = 0; j < expansionFactor; j++)
                 {
-                    throw new Exception("Bugger!");
-                }
+                    runs.AddRange(copyRuns);
 
-                ulong andMask = 0;
-                ulong orMask = 0;
-
-                for (int i = 0; i < source.Length; i++)
-                {
-                    char c = source[i];
-                    var state = GetSpringState(c);
-
-                    if (state == SpringState.Broken || state == SpringState.Unknown)
+                    if (j != 0)
                     {
-                        orMask |= ((uint)1 << i);
+                        // unknown separator
+                        orMask |= ((BigInteger)1 << currentIndex);
+                        currentIndex++;
                     }
 
-                    if(state == SpringState.Broken)
+                    for (int i = 0; i < source.Length; i++, currentIndex++)
                     {
-                        andMask |= ((uint)1 << i);
+                        char c = source[i];
+                        var state = GetSpringState(c);
+
+                        if (state == SpringState.Broken || state == SpringState.Unknown)
+                        {
+                            orMask |= ((BigInteger)1 << currentIndex);
+                        }
+
+                        if (state == SpringState.Broken)
+                        {
+                            andMask |= ((BigInteger)1 << currentIndex);
+                        }
                     }
+
+                    PrintMask(andMask);
+                    PrintMask(orMask);
                 }
 
-                long thisTotal = CheckVariantLevel(0, runs, andMask, orMask, 0, 0, source.Length);
+                long thisTotal = CheckVariantLevel(0, runs, andMask, orMask, 0, 0, (source.Length * expansionFactor) + expansionFactor - 1);
 
                 Console.WriteLine($"Variant total {thisTotal}");
 
