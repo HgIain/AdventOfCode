@@ -61,8 +61,8 @@ namespace Day12
 
                 // try to fit the next run
                 var run = runs.First();
-                var remaining = runs.Skip(1).ToList();
-                var remainingTotal2 = remainingTotal.Skip(1).ToList();
+                var remaining = runs[1..];
+                var remainingTotal2 = remainingTotal[1..];
 
                 bool fits = true;
 
