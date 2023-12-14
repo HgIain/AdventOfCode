@@ -10,6 +10,7 @@ namespace Day12
     public class OperationalSpring
     {
         private static readonly Dictionary<string, long> cache = [];
+        private static int cacheHits = 0;
 
         static private string GetKey(string sourceData, List<int> runs)
         {
@@ -23,6 +24,7 @@ namespace Day12
             string cacheKey = GetKey(sourceData, runs);
             if(cache.TryGetValue(cacheKey, out var cachedValue))
             {
+                cacheHits++;
                 return cachedValue;
             }
 
@@ -137,7 +139,7 @@ namespace Day12
                 total += thisTotal;
             }
 
-            Console.WriteLine($"Total {total}");
+            Console.WriteLine($"Total {total}, cache size is {cache.Count}, hits were {cacheHits}");
 
             return total;
         }
