@@ -9,124 +9,92 @@ namespace Day12
 {
     public class OperationalSpring
     {
-        enum SpringState
+        private static readonly Dictionary<string, long> cache = [];
+
+        static private string GetKey(string sourceData, List<int> runs)
         {
-            Unknown,
-            Broken,
-            Working,
-            None,
+            var key = sourceData + ":" + string.Join(",", runs);
+            return key;
         }
 
-        private record Spring(SpringState state, int run);
-
-        static private SpringState GetSpringState(char c) => c switch
+        static public long CheckVariantLevel(string sourceData, List<int> runs, List<int> remainingTotal)
         {
-            '?' => SpringState.Unknown,
-            '#' => SpringState.Broken,
-            '.' => SpringState.Working,
-            _ => throw new Exception("Unexpected spring state")
-        };
-
-        public static BigInteger AddBits(BigInteger mask, int offset, int length)
-        {
-            mask |= GetBitmask(length) << offset;
-
-            return mask;
-        }
-
-        public static void PrintMask(BigInteger mask, int length = 128)
-        {
-            for (int i = 0; i < length; i++)
+            long total = 0;
+            string cacheKey = GetKey(sourceData, runs);
+            if(cache.TryGetValue(cacheKey, out var cachedValue))
             {
-                if ((mask & (BigInteger)((BigInteger)1 << i)) != 0)
+                return cachedValue;
+            }
+
+            if (runs.Count == 0)
+            {
+                // no more runs to fit
+                if(sourceData.Contains('#'))
                 {
-                    Console.Write("1");
+                    // still have a mandatory run to fit
+                    total = 0;
                 }
                 else
                 {
-                    Console.Write("0");
+                    // we have filled all the runs
+                    total = 1;
                 }
             }
-            Console.WriteLine();
-        }
-
-        static private BigInteger[] _cache = [];
-
-        static private BigInteger GetBitmask(int bits)
-        {
-            return _cache[bits];
-        }
-
-        static bool CheckMask(BigInteger currMask, BigInteger andMask, BigInteger orMask, int bitLength)
-        {
-            BigInteger bitmask = GetBitmask(bitLength);
-
-            //currMask &= bitmask;
-            //andMask &= bitmask;
-            //orMask &= bitmask;
-
-
-            if ((andMask & currMask) != (andMask&bitmask))
+            else if (sourceData.Length < remainingTotal.First())
             {
-                return false;
+                // not enough space to fit the next run
+                total = 0;
             }
-
-            if ((orMask & currMask) != currMask)
+            else if (sourceData[0] == '.')
             {
-                return false;
-            }
-
-            return true;
-        }
-
-        static public long CheckVariantLevel(int level, List<int> runs, BigInteger andMask, BigInteger orMask, BigInteger currMask, int startingOffset, int maxLength, List<int> remainingTotals)
-        {
-            long total = 0;
-            int run = runs[level];
-            int remainingTotal = remainingTotals[level];
-
-            int biggestOffset = maxLength - startingOffset - run + 1 - remainingTotal;
-
-            if (level == runs.Count - 1)
-            {
-                for (int i = 0; i < biggestOffset; i++)
-                {
-                    BigInteger newMask = AddBits(currMask, startingOffset + i, run);
-
-                    //PrintMask(newMask);
-                    //PrintMask(andMask);
-                    //PrintMask(orMask);
-
-                    if ((andMask & newMask) != andMask)
-                    {
-                        continue;
-                    }
-
-                    if ((orMask & newMask) != newMask)
-                    {
-                        continue;
-                    }
-                    total++;
-                }
+                // skip this character
+                total = CheckVariantLevel(sourceData.Substring(1), runs, remainingTotal);
             }
             else
             {
-
-
-                for (int i = 0; i < biggestOffset; i++)
+                if (sourceData[0] == '?')
                 {
-                    BigInteger newMask = AddBits(currMask, startingOffset + i, run);
-
-                    if (!CheckMask(newMask, andMask, orMask, startingOffset + i + run))
-                    {
-                        // early out
-                        continue;
-                    }
-
-                    total += CheckVariantLevel(level + 1, runs, andMask, orMask, newMask, startingOffset + i + run + 1, maxLength, remainingTotals);
+                    // we have a choice, choose both
+                    total = CheckVariantLevel(sourceData.Substring(1), runs, remainingTotal);
                 }
+
+
+                // try to fit the next run
+                var run = runs.First();
+                var remaining = runs.Skip(1).ToList();
+                var remainingTotal2 = remainingTotal.Skip(1).ToList();
+
+                bool fits = true;
+
+                for (int i = 0; i < run; i++)
+                {
+                    if (sourceData[i] == '.')
+                    {
+                        fits = false;
+                        break;
+                    }
+                }
+
+                if (fits)
+                {
+                    if(sourceData.Length == run)
+                    {
+                        // we have filled all the runs
+                        total += 1;
+                    }
+                    else
+                    {
+                        // move onto the next run
+                        if (sourceData[run] != '#')
+                        {
+                            total += CheckVariantLevel(sourceData.Substring(run + 1), remaining, remainingTotal2);
+                        }
+                    }
+                }
+                    
             }
 
+            cache[cacheKey] = total;
             return total;
         }
 
@@ -136,23 +104,9 @@ namespace Day12
 
             long total = 0;
 
-            int maxBits = 512;
 
-            _cache = new BigInteger[maxBits];
 
-            BigInteger mask = 0;
-
-            for (int i = 0; i < maxBits; i++)
-            {
-                _cache[i] = mask;
-                mask |= ((BigInteger)1 << (i));
-            }
-
-#if false
-            Parallel.ForEach(lines, line =>
-#else
             foreach (var line in lines)
-#endif
             {
                 var parts = line.Split([' ', ',']);
 
@@ -161,60 +115,28 @@ namespace Day12
                 var copyRuns = parts.Skip(1).Select(x => int.Parse(x));
 
                 var source = parts[0];
+                runs.AddRange(copyRuns);
 
-                BigInteger andMask = 0;
-                BigInteger orMask = 0;
-
-                int currentIndex = 0;
-
-                for (int j = 0; j < expansionFactor; j++)
+                for (int j = 1; j < expansionFactor; j++)
                 {
+                    source += "?" + parts[0];
                     runs.AddRange(copyRuns);
-
-                    if (j != 0)
-                    {
-                        // unknown separator
-                        orMask |= ((BigInteger)1 << currentIndex);
-                        currentIndex++;
-                    }
-
-                    for (int i = 0; i < source.Length; i++, currentIndex++)
-                    {
-                        char c = source[i];
-                        var state = GetSpringState(c);
-
-                        if (state == SpringState.Broken || state == SpringState.Unknown)
-                        {
-                            orMask |= ((BigInteger)1 << currentIndex);
-                        }
-
-                        if (state == SpringState.Broken)
-                        {
-                            andMask |= ((BigInteger)1 << currentIndex);
-                        }
-                    }
-
-                    //PrintMask(andMask,128);
-                    //PrintMask(orMask,128);
                 }
 
-                for(int i = 0; i<runs.Count - 1;i++)
+                for(int i = 0; i<runs.Count;i++)
                 {
-                    var skipRuns = runs.Skip(i + 1);
-                    var run = skipRuns.Sum(c => c) + skipRuns.Count();
+                    var skipRuns = runs.Skip(i);
+                    var run = skipRuns.Sum(c => c) + skipRuns.Count() - 1;
                     remainingTotal.Add(run);
                 }
-                remainingTotal.Add(0);
 
-                long thisTotal = CheckVariantLevel(0, runs, andMask, orMask, 0, 0, (source.Length * expansionFactor) + expansionFactor - 1, remainingTotal);
+                long thisTotal = CheckVariantLevel(source, runs, remainingTotal);
 
                 Console.WriteLine($"Variant total {thisTotal}");
 
                 total += thisTotal;
             }
-#if false
-            );
-#endif
+
             Console.WriteLine($"Total {total}");
 
             return total;
