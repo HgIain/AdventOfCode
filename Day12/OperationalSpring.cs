@@ -48,14 +48,14 @@ namespace Day12
             else if (sourceData[0] == '.')
             {
                 // skip this character
-                total = CheckVariantLevel(sourceData.Substring(1), runs, remainingTotal);
+                total = CheckVariantLevel(sourceData[1..], runs, remainingTotal);
             }
             else
             {
                 if (sourceData[0] == '?')
                 {
                     // we have a choice, choose both
-                    total = CheckVariantLevel(sourceData.Substring(1), runs, remainingTotal);
+                    total = CheckVariantLevel(sourceData[1..], runs, remainingTotal);
                 }
 
 
@@ -87,7 +87,7 @@ namespace Day12
                         // move onto the next run
                         if (sourceData[run] != '#')
                         {
-                            total += CheckVariantLevel(sourceData.Substring(run + 1), remaining, remainingTotal2);
+                            total += CheckVariantLevel(sourceData[(run + 1)..], remaining, remainingTotal2);
                         }
                     }
                 }

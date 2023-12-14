@@ -152,7 +152,9 @@ namespace Day14
             }
         }
 
+#pragma warning disable IDE0051 // Remove unused private members
         private void PrintGrid()
+#pragma warning restore IDE0051 // Remove unused private members
         {
             for(int y = 0; y < rowCount; y++)
             {
@@ -168,7 +170,7 @@ namespace Day14
         public long GetGridHash()
         {
             int p = 16777619;
-            long hash = 2166136261l;
+            long hash = 2166136261L;
 
             for (int y = 0; y < rowCount; y++)
             {
