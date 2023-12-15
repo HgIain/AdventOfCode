@@ -10,17 +10,17 @@ namespace Day15
     {
         static private readonly int bitMask = 0b11111111;
 
-        static private Dictionary<string, long> hashCache = [];
+        private static readonly Dictionary<string, int> hashCache = [];
 
-        static private long calculateHashForString(string line)
+        static private int calculateHashForString(string line)
         {
-            if(hashCache.TryGetValue(line, out long value))
+            if(hashCache.TryGetValue(line, out int value))
             {
                 return value;
             }
 
             int currentHash = 0;
-            long total = 0;
+            int total = 0;
 
             foreach (char c in line)
             {
@@ -108,8 +108,8 @@ namespace Day15
                 var box = boxes[boxIndex];
                 for(int lensPos = 0; lensPos < box.Count; lensPos++)
                 {
-                    var item = box[lensPos];
-                    total += (boxIndex + 1) * (lensPos + 1) * item.focalLength;
+                    var (label, focalLength) = box[lensPos];
+                    total += (boxIndex + 1) * (lensPos + 1) * focalLength;
                 }
             }
 
