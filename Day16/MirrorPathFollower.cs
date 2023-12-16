@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Day16
+﻿namespace Day16
 {
     public class MirrorPathFollower
     {
@@ -18,17 +12,14 @@ namespace Day16
             Right = 0b1000
         }
 
-        private readonly char[,] grid;
         private readonly string[] lines;
 
         public MirrorPathFollower(string fileName)
         {
-            lines = System.IO.File.ReadAllLines(fileName);
+            lines = File.ReadAllLines(fileName);
 
             numCols = lines[0].Length;
             numRows = lines.Length;
-
-            grid = new char[numCols, numRows];
         }
 
         private readonly int numCols;
