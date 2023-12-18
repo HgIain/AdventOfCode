@@ -30,7 +30,7 @@ namespace Day18
         private record DigInstruction(Direction direction, int distance);
 
         private readonly List<DigInstruction> instructions = [];
-        private readonly Dictionary<int, Dictionary<int , Direction>> dug = [];
+        private readonly Dictionary<int, SortedDictionary<int , Direction>> dug = [];
         private readonly (int x, int y) start;
 
         private int currMinX = 0;
@@ -76,7 +76,8 @@ namespace Day18
                     throw new Exception("Invalid instruction");
                 }
 
-                var distance = Convert.ToInt32(split[2][..^2],16);
+                var distAsHexString = split[2][..^1];
+                var distance = Convert.ToInt32(distAsHexString, 16);
                 var directions = split[2][^1] - '0';
                  
                 var direction = split[2][^1] switch
@@ -92,7 +93,7 @@ namespace Day18
             }
         }
 
-        public PoolDigger(string fileName, bool bigMode = false)
+        public PoolDigger(string fileName, bool bigMode = true)
         {
             var lines = File.ReadAllLines(fileName);
 
@@ -108,64 +109,52 @@ namespace Day18
             start = (0,0);
         }
 
-        private int GetHoleSizeReally(bool print = false)
+        private long GetHoleSizeReally(bool print = false)
         {
-            int holeSize = 0;
+            long holeSize = 0;
             for (int y = currMinY; y <= currMaxY; y++)
             {
                 var row = dug[y];
                 bool inHole = false;
                 var currentDirection = Direction.None;
-                for (int x = currMinX; x <= currMaxX; x++)
+                
+                int prevX = currMinX;
+
+                foreach(var (x, direction) in row)
                 {
-                    if (row.TryGetValue(x, out var direction))
+                    if (inHole && currentDirection == Direction.None)
                     {
-                        holeSize++;
+                        holeSize += x - prevX - 1;
+                    }
 
-                        if ((direction & Direction.LeftRight) == Direction.None)
-                        {
-                            inHole = !inHole;
-                        }
-                        else if (currentDirection == Direction.None)
-                        {
-                            currentDirection = (direction & Direction.UpDown);
-                        }
-                        else
-                        {
-                            var newDirection = direction & Direction.UpDown;
+                    holeSize++;
 
-                            if(newDirection != Direction.None)
-                            {
-                                if(newDirection == currentDirection)
-                                {
-                                    inHole = !inHole;
-                                }
-                                currentDirection = Direction.None;
-
-                            }
-                        }
-
-                        //Console.Write('#');
+                    if ((direction & Direction.LeftRight) == Direction.None)
+                    {
+                        inHole = !inHole;
+                    }
+                    else if (currentDirection == Direction.None)
+                    {
+                        currentDirection = (direction & Direction.UpDown);
                     }
                     else
                     {
-                        if(currentDirection != Direction.None)
-                        {
-                            PrintGrid(y, y + 1);
-                            throw new Exception("Hole not closed");
-                        }
+                        var newDirection = direction & Direction.UpDown;
 
-                        if (inHole)
+                        if (newDirection != Direction.None)
                         {
-                            holeSize++;
-                            //Console.Write('#');
-                        }
-                        else
-                        {
-                            //Console.Write('.');
+                            if (newDirection == currentDirection)
+                            {
+                                inHole = !inHole;
+                            }
+                            currentDirection = Direction.None;
+
                         }
                     }
+
+                    prevX = x;
                 }
+
                 //Console.WriteLine();
             }
 
@@ -186,6 +175,7 @@ namespace Day18
             for (int y = startY; y <= endY; y++)
             {
                 var row = dug[y];
+
                 for (int x = currMinX; x <= currMaxX; x++)
                 {
                     if (row.TryGetValue(x, out var direction))
@@ -237,7 +227,7 @@ namespace Day18
             }
         }
 
-        public int GetHoleSize()
+        public long GetHoleSize()
         {
             (int x, int y) = start;
 
@@ -281,7 +271,7 @@ namespace Day18
                 }
             }
             //PrintGrid();
-            int holeSize = GetHoleSizeReally(true);
+            long holeSize = GetHoleSizeReally(true);
             //PrintGrid();
 
             Console.WriteLine($"Hole size: {holeSize}");
