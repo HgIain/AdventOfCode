@@ -245,15 +245,21 @@ namespace Day18
 
                 SetDug(x,y, instruction.direction);
 
-                for (int i = 0; i < instruction.distance; i++)
+                if (instruction.direction == Direction.Up || instruction.direction == Direction.Down)
                 {
-                    x += offset.x;
-                    y += offset.y;
-
-                    if (instruction.direction == Direction.Up || instruction.direction == Direction.Down || i == instruction.distance - 1)
+                    for (int i = 0; i < instruction.distance; i++)
                     {
+                        x += offset.x;
+                        y += offset.y;
                         SetDug(x, y, instruction.direction);
                     }
+                }
+                else
+                {
+                    // Only write out the ends when doing left/right
+                    x += offset.x * instruction.distance;
+                    y += offset.y * instruction.distance;
+                    SetDug(x, y, instruction.direction);
                 }
 
                 if (x < currMinX)
