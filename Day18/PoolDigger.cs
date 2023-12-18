@@ -111,16 +111,17 @@ namespace Day18
 
         private long GetHoleSizeReally(bool print = false)
         {
-            long holeSize = 0;
-            for (int y = currMinY; y <= currMaxY; y++)
+            long totalSize = 0;
+            Parallel.For(currMinY, currMaxY + 1, y =>
             {
                 var row = dug[y];
+                long holeSize = 0;
                 bool inHole = false;
                 var currentDirection = Direction.None;
-                
+
                 int prevX = currMinX;
 
-                foreach(var (x, direction) in row)
+                foreach (var (x, direction) in row)
                 {
                     if ((inHole && currentDirection == Direction.None) || currentDirection != Direction.None)
                     {
@@ -155,10 +156,11 @@ namespace Day18
                     prevX = x;
                 }
 
+                Interlocked.Add(ref totalSize, holeSize);
                 //Console.WriteLine();
-            }
+            });
 
-            return holeSize;
+            return totalSize;
         }
 
         private void PrintGrid(int startY = int.MaxValue, int endY = int.MaxValue)
