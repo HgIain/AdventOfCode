@@ -122,7 +122,7 @@ namespace Day18
 
                 foreach(var (x, direction) in row)
                 {
-                    if (inHole && currentDirection == Direction.None)
+                    if ((inHole && currentDirection == Direction.None) || currentDirection != Direction.None)
                     {
                         holeSize += x - prevX - 1;
                     }
@@ -250,7 +250,10 @@ namespace Day18
                     x += offset.x;
                     y += offset.y;
 
-                    SetDug(x, y, instruction.direction);
+                    if (instruction.direction == Direction.Up || instruction.direction == Direction.Down || i == instruction.distance - 1)
+                    {
+                        SetDug(x, y, instruction.direction);
+                    }
                 }
 
                 if (x < currMinX)
