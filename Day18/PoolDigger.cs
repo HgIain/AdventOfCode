@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Day18
 {
-    public class PoolDigger
+    public partial class PoolDigger
     {
         [Flags]
         private enum Direction
@@ -29,20 +30,22 @@ namespace Day18
         private record DigInstruction(Direction direction, int distance);
 
         private readonly List<DigInstruction> instructions = [];
-        private readonly Direction[,] dug;
+        private readonly Dictionary<int, Dictionary<int , Direction>> dug = [];
         private readonly (int x, int y) start;
 
-        private int currMinX = int.MaxValue;
+        private int currMinX = 0;
         private int currMaxX = 0;
             
-        private int currMinY = int.MaxValue;
+        private int currMinY = 0;
         private int currMaxY = 0;
 
-        public PoolDigger(string fileName)
-        {
-            var lines = File.ReadAllLines(fileName);
+        [GeneratedRegex(@"(\d)")]
+        private static partial Regex InstrcutionRegex();
 
-            foreach(var line in lines)
+
+        private void GetOriginalInstructions(string[] lines)
+        {
+            foreach (var line in lines)
             {
                 var split = line.Split(' ');
 
@@ -59,32 +62,50 @@ namespace Day18
 
                 instructions.Add(new DigInstruction(direction, distance));
             }
+        }
 
-            Dictionary<Direction, int> bounds = [];
-
-            foreach(var instruction in instructions)
+        private void GetBigInstructions(string[] lines)
+        {
+            char[] splitChars = [' ', '(',')', '#'];
+            foreach (var line in lines)
             {
-                if (!bounds.ContainsKey(instruction.direction))
+                var split = line.Split(splitChars, StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);
+
+                if(split.Length != 3)
                 {
-                    bounds[instruction.direction] = instruction.distance;
+                    throw new Exception("Invalid instruction");
                 }
-                else
+
+                var distance = Convert.ToInt32(split[2][..^2],16);
+                var directions = split[2][^1] - '0';
+                 
+                var direction = split[2][^1] switch
                 {
-                    bounds[instruction.direction] += instruction.distance;
-                }
+                    '0' => Direction.Right,
+                    '1' => Direction.Down,
+                    '2' => Direction.Left,
+                    '3' => Direction.Up,
+                    _ => throw new InvalidEnumArgumentException()
+                };
+
+                instructions.Add(new DigInstruction(direction, distance));
+            }
+        }
+
+        public PoolDigger(string fileName, bool bigMode = false)
+        {
+            var lines = File.ReadAllLines(fileName);
+
+            if(!bigMode)
+            {
+                GetOriginalInstructions(lines);
+            }
+            else
+            {
+                GetBigInstructions(lines);
             }
 
-            var minX = -bounds[Direction.Left];
-            var maxX = bounds[Direction.Right];
-            var minY = -bounds[Direction.Up];
-            var maxY = bounds[Direction.Down];
-
-            var xTotal = maxX - minX + 1;
-            var yTotal = maxY - minY + 1;
-
-            dug = new Direction[xTotal, yTotal];
-
-            start = (-minX, -minY);
+            start = (0,0);
         }
 
         private int GetHoleSizeReally(bool print = false)
@@ -92,25 +113,26 @@ namespace Day18
             int holeSize = 0;
             for (int y = currMinY; y <= currMaxY; y++)
             {
+                var row = dug[y];
                 bool inHole = false;
                 var currentDirection = Direction.None;
                 for (int x = currMinX; x <= currMaxX; x++)
                 {
-                    if (dug[x, y] != Direction.None)
+                    if (row.TryGetValue(x, out var direction))
                     {
                         holeSize++;
 
-                        if ((dug[x, y] & Direction.LeftRight) == Direction.None)
+                        if ((direction & Direction.LeftRight) == Direction.None)
                         {
                             inHole = !inHole;
                         }
                         else if (currentDirection == Direction.None)
                         {
-                            currentDirection = (dug[x, y] & Direction.UpDown);
+                            currentDirection = (direction & Direction.UpDown);
                         }
                         else
                         {
-                            var newDirection = dug[x, y] & Direction.UpDown;
+                            var newDirection = direction & Direction.UpDown;
 
                             if(newDirection != Direction.None)
                             {
@@ -163,28 +185,27 @@ namespace Day18
 
             for (int y = startY; y <= endY; y++)
             {
+                var row = dug[y];
                 for (int x = currMinX; x <= currMaxX; x++)
                 {
-                    if (dug[x,y] == Direction.Up || dug[x,y] == Direction.Down)
+                    if (row.TryGetValue(x, out var direction))
                     {
-                        Console.Write('|');
-                    }
-                    else if (dug[x, y] == Direction.Left || dug[x, y] == Direction.Right)
-                    {
-                        Console.Write('-');
-                    }
-                    else if (dug[x,y] == Direction.UpLeft || dug[x,y] == Direction.UpRight)
-                    {
-                        Console.Write('*');
-                    }
-                    else if (dug[x, y] == Direction.DownLeft || dug[x, y] == Direction.DownRight)
-                    {
-                        Console.Write('^');
-                    }
-                    else if (dug[x, y] != Direction.None)
-                    {
-                        throw new Exception("Invalid direction");
-                        //Console.Write('#');
+                        if (direction == Direction.Up || direction == Direction.Down)
+                        {
+                            Console.Write('|');
+                        }
+                        else if (direction == Direction.Left || direction == Direction.Right)
+                        {
+                            Console.Write('-');
+                        }
+                        else if (direction == Direction.UpLeft || direction == Direction.UpRight)
+                        {
+                            Console.Write('*');
+                        }
+                        else if (direction == Direction.DownLeft || direction == Direction.DownRight)
+                        {
+                            Console.Write('^');
+                        }
                     }
                     else
                     {
@@ -196,6 +217,24 @@ namespace Day18
             }
             Console.WriteLine();
             Console.WriteLine();
+        }
+
+        private void SetDug(int x, int y, Direction direction)
+        {
+            if(!dug.TryGetValue(y, out var row))
+            {
+                row = [];
+                dug[y] = row;
+            }
+
+            if(row.TryGetValue(x, out var existing))
+            {
+                row[x] = existing | direction;
+            }
+            else
+            {
+                row[x] = direction;
+            }
         }
 
         public int GetHoleSize()
@@ -213,17 +252,18 @@ namespace Day18
                     _ => throw new InvalidEnumArgumentException()
                 };
 
-                dug[x, y] |= instruction.direction;
+
+                SetDug(x,y, instruction.direction);
 
                 for (int i = 0; i < instruction.distance; i++)
                 {
                     x += offset.x;
                     y += offset.y;
 
-                    dug[x, y] |= instruction.direction;
+                    SetDug(x, y, instruction.direction);
                 }
 
-                if(x < currMinX)
+                if (x < currMinX)
                 {
                     currMinX = x;
                 }
