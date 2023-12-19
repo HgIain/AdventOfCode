@@ -55,7 +55,7 @@ namespace Day17
             public required int currentTotalHeatLost;
         }
 
-        private List<Node>[,] nodes;
+        private readonly List<Node>[,] nodes;
 
         private int currMin = int.MaxValue;
 
@@ -164,7 +164,7 @@ namespace Day17
         {
             //nodes[0,0] = new List<Node> { new Node { entryDirection = Direction.None, directionCount = 0, currentTotalHeatLost = 0 } };
 
-            int total = GetBestDistanceFromNode(0,0, Direction.None, 0, 0, out var printPath);
+            int total = GetBestDistanceFromNode(0,0, Direction.None, 0, 0, out _);
 
             Console.WriteLine($"Total: {total}");
 
