@@ -25,10 +25,87 @@ namespace Day19
         private record Instruction(char type, Comparison comparison, int comparedValue, Action action, string forwardWorkflow);
         private record Workflow(string name, List<Instruction> instructions);
 
-        private record ItemPart(int x, int m, int a, int s);
+        private record ItemPart(Range x, Range m, Range a, Range s);
 
         private readonly Dictionary<string, Workflow> workflows = [];
-        private readonly List<ItemPart> itemParts = [];
+        private readonly List<(ItemPart part, string nextFlow)> itemParts = [];
+        private readonly List<ItemPart> acceptedItemParts = [];
+
+        private void ProcessWorkflow(string line)
+        {
+            char[] chars = ['{', '}'];
+            var parts = line.Split(chars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (parts.Length != 2)
+            {
+                throw new Exception("Invalid workflow");
+            }
+
+            var workflowName = parts[0];
+            var instructions = parts[1].Split(',');
+            var workflow = new Workflow(workflowName, []);
+
+
+            foreach (var instruction in instructions)
+            {
+                char[] splitchars;
+                Comparison comparison;
+
+                if (instruction.Contains('>'))
+                {
+                    splitchars = ['>', ':'];
+                    comparison = Comparison.GreaterThan;
+                }
+                else if (instruction.Contains('<'))
+                {
+                    splitchars = ['<', ':'];
+                    comparison = Comparison.LessThan;
+                }
+                else
+                {
+                    if (instruction == "A")
+                    {
+                        workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Accept, ""));
+                    }
+                    else if (instruction == "R")
+                    {
+                        workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Reject, ""));
+                    }
+                    else
+                    {
+                        workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Forward, instruction));
+                    }
+                    continue;
+                }
+
+                var instructionParts = instruction.Split(splitchars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (instructionParts.Length != 3)
+                {
+                    throw new Exception("Invalid instruction");
+                }
+
+                var value = int.Parse(instructionParts[1]);
+                var forwardWorkflow = instructionParts[2];
+                char type = instructionParts[0][0];
+
+                if (forwardWorkflow == "A")
+                {
+                    workflow.instructions.Add(new Instruction(type, comparison, value, Action.Accept, ""));
+                }
+                else if (forwardWorkflow == "R")
+                {
+                    workflow.instructions.Add(new Instruction(type, comparison, value, Action.Reject, ""));
+                }
+                else
+                {
+                    workflow.instructions.Add(new Instruction(type, comparison, value, Action.Forward, forwardWorkflow));
+                }
+            }
+
+            workflows.Add(workflowName, workflow);
+
+        }
 
         public FactoryProcessor(string fileName)
         {
@@ -44,77 +121,7 @@ namespace Day19
                     break;
                 }
 
-                char[] chars = ['{','}'];
-                var parts = line.Split(chars, StringSplitOptions.RemoveEmptyEntries| StringSplitOptions.TrimEntries);
-
-                if(parts.Length != 2)
-                {
-                    throw new Exception("Invalid workflow");
-                }
-
-                var workflowName = parts[0];
-                var instructions = parts[1].Split(',');
-                var workflow = new Workflow(workflowName, []);
-
-
-                foreach(var instruction in instructions)
-                {
-                    char[] splitchars;
-                    Comparison comparison;
-
-                    if (instruction.Contains('>'))
-                    {
-                        splitchars = ['>', ':'];
-                        comparison = Comparison.GreaterThan;
-                    }
-                    else if(instruction.Contains('<'))
-                    {
-                        splitchars = ['<', ':'];
-                        comparison = Comparison.LessThan;
-                    }
-                    else
-                    {
-                        if(instruction == "A")
-                        { 
-                            workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Accept, ""));
-                        }
-                        else if(instruction == "R")
-                        {
-                            workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Reject, ""));
-                        }
-                        else
-                        {
-                            workflow.instructions.Add(new Instruction('a', Comparison.None, 0, Action.Forward, instruction));
-                        }
-                        continue;
-                    }
-
-                    var instructionParts = instruction.Split(splitchars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                    if(instructionParts.Length != 3)
-                    {
-                        throw new Exception("Invalid instruction");
-                    }
-
-                    var value = int.Parse(instructionParts[1]);
-                    var forwardWorkflow = instructionParts[2];
-                    char type = instructionParts[0][0];
-
-                    if(forwardWorkflow == "A")
-                    {
-                        workflow.instructions.Add(new Instruction(type, comparison, value, Action.Accept, ""));
-                    }
-                    else if(forwardWorkflow == "R")
-                    {
-                        workflow.instructions.Add(new Instruction(type, comparison, value, Action.Reject, ""));
-                    }
-                    else
-                    {
-                        workflow.instructions.Add(new Instruction(type, comparison, value, Action.Forward, forwardWorkflow));
-                    }
-                }
-
-                workflows.Add(workflowName, workflow);
+                ProcessWorkflow(line);
             }
             for (; i < lines.Length; i++)
             {
@@ -139,7 +146,7 @@ namespace Day19
 
                     values[j] = int.Parse(itemSubParts[1]);
                 }
-                itemParts.Add(new ItemPart(values[0], values[1], values[2], values[3]));
+                itemParts.Add((new ItemPart(new Range(values[0], values[0]+1), new Range(values[1], values[1] + 1), new Range(values[2], values[2] + 1), new Range(values[3], values[3] + 1)),"in"));
             }
         }
 
@@ -147,11 +154,13 @@ namespace Day19
         {
             int total = 0;
 
-            foreach(var itemPart in itemParts)
+            foreach(var itemPartWithFlow in itemParts)
             {
+                var itemPart = itemPartWithFlow.part;
+
                 if(isAccepted(itemPart))
                 {
-                    total += itemPart.x + itemPart.m + itemPart.a + itemPart.s;
+                    total += itemPart.x.Start.Value + itemPart.m.Start.Value + itemPart.a.Start.Value + itemPart.s.Start.Value;
                 }
             }
 
@@ -172,10 +181,10 @@ namespace Day19
 
                 int comparingValue = instruction.type switch
                 {
-                    'x' => itemPart.x,
-                    'm' => itemPart.m,
-                    'a' => itemPart.a,
-                    's' => itemPart.s,
+                    'x' => itemPart.x.Start.Value,
+                    'm' => itemPart.m.Start.Value,
+                    'a' => itemPart.a.Start.Value,
+                    's' => itemPart.s.Start.Value,
                     _ => throw new Exception("Invalid instruction"),
                 };
 
