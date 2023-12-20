@@ -55,7 +55,7 @@ namespace Day20
                         outputModule.AddInput(module.name);
                     }
 
-                    if(output == "rx")
+                    if(output == "th")
                     {
                         rxInputsHighPulseTime.Add(module.name, []);
                     }
@@ -110,9 +110,34 @@ namespace Day20
                             Console.WriteLine($"Button presses = {i + 1}");
                             return i + 1;
                         }
-                        else
+                    }
+
+                    if(destination == "th")
+                    {
+                        if (pulse == PulseType.High)
                         {
-                            //rxInputsHighPulseTime[from].Add(i);
+                            rxInputsHighPulseTime[from].Add(i + 1);
+                        }
+
+                        bool done = true;
+                        long cycleTime = 1;
+
+                        foreach(var pulseTime in rxInputsHighPulseTime)
+                        {
+                            if (pulseTime.Value.Count == 0)
+                            {
+                                done = false;
+                                break;
+                            }
+                            else
+                            {
+                                cycleTime *= pulseTime.Value[0];
+                            }
+                        }
+
+                        if (done)
+                        {
+                            return cycleTime;
                         }
                     }
 
