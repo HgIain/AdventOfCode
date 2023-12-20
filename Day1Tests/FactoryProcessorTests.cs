@@ -14,17 +14,33 @@ namespace Day19.Tests
         [TestMethod()]
         public void GetValueTest()
         {
-            var factoryProcessor = new FactoryProcessor("Day19TestInput.txt");
+            var factoryProcessor = new FactoryProcessor("Day19TestInput.txt", false);
             var result = factoryProcessor.GetValue();
-            Assert.AreEqual(19114, result);
+            Assert.AreEqual((ulong)19114, result);
         }
         
         [TestMethod()]
         public void GetValueTestFullData()
         {
-            var factoryProcessor = new FactoryProcessor("Day19Input.txt");
+            var factoryProcessor = new FactoryProcessor("Day19Input.txt", false);
             var result = factoryProcessor.GetValue();
-            Assert.AreEqual(398527, result);
+            Assert.AreEqual((ulong)398527, result);
+        }
+
+        [TestMethod()]
+        public void GetValueTestRange()
+        {
+            var factoryProcessor = new FactoryProcessor("Day19TestInput.txt", true);
+            var result = factoryProcessor.GetValue();
+            Assert.AreEqual((ulong)167409079868000, result);
+        }
+
+        [TestMethod()]
+        public void GetValueTestRangeFullData()
+        {
+            var factoryProcessor = new FactoryProcessor("Day19Input.txt", true);
+            var result = factoryProcessor.GetValue();
+            Assert.AreEqual((ulong)133973513090020, result);
         }
     }
 }
