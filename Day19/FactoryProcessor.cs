@@ -28,7 +28,7 @@ namespace Day19
         private record ItemPart(Range x, Range m, Range a, Range s);
 
         private readonly Dictionary<string, Workflow> workflows = [];
-        private readonly List<(ItemPart part, string nextFlow)> itemParts = [];
+        private readonly Queue<(ItemPart part, string nextFlow)> itemParts = [];
         private readonly List<ItemPart> acceptedItemParts = [];
 
         private void ProcessWorkflow(string line)
@@ -146,7 +146,7 @@ namespace Day19
 
                     values[j] = int.Parse(itemSubParts[1]);
                 }
-                itemParts.Add((new ItemPart(new Range(values[0], values[0]+1), new Range(values[1], values[1] + 1), new Range(values[2], values[2] + 1), new Range(values[3], values[3] + 1)),"in"));
+                itemParts.Enqueue((new ItemPart(new Range(values[0], values[0]+1), new Range(values[1], values[1] + 1), new Range(values[2], values[2] + 1), new Range(values[3], values[3] + 1)),"in"));
             }
         }
 
@@ -154,14 +154,15 @@ namespace Day19
         {
             int total = 0;
 
-            foreach(var itemPartWithFlow in itemParts)
+            while (itemParts.Count > 0)
             {
-                var itemPart = itemPartWithFlow.part;
+                var (part, flow) = itemParts.Dequeue();
+                RunWorkflowForItem(workflows[flow], part);
+            }
 
-                if(isAccepted(itemPart))
-                {
-                    total += itemPart.x.Start.Value + itemPart.m.Start.Value + itemPart.a.Start.Value + itemPart.s.Start.Value;
-                }
+            foreach (var itemPart in acceptedItemParts)
+            {
+                total += itemPart.x.Start.Value + itemPart.m.Start.Value + itemPart.a.Start.Value + itemPart.s.Start.Value;
             }
 
             Console.WriteLine($"Total: {total}");
@@ -169,39 +170,66 @@ namespace Day19
             return total;
         }
 
-        private Action RunWorkflowForItem(Workflow flow,ItemPart itemPart, out string forwardingWorkflow)
+        private void RunWorkflowForItem(Workflow flow,ItemPart itemPart)
         {
             foreach(var instruction in flow.instructions)
             {
                 if(instruction.comparison == Comparison.None)
                 {
-                    forwardingWorkflow = instruction.forwardWorkflow;
-                    return instruction.action;
+                    if(instruction.action == Action.Accept)
+                    {
+                        acceptedItemParts.Add(itemPart);
+                    }
+                    else if(instruction.action == Action.Forward)
+                    {
+                        // add it back on the queue
+                        itemParts.Enqueue((itemPart, instruction.forwardWorkflow));
+                    }
+
+                    return;
                 }
 
-                int comparingValue = instruction.type switch
+                Range comparingValue = instruction.type switch
                 {
-                    'x' => itemPart.x.Start.Value,
-                    'm' => itemPart.m.Start.Value,
-                    'a' => itemPart.a.Start.Value,
-                    's' => itemPart.s.Start.Value,
+                    'x' => itemPart.x,
+                    'm' => itemPart.m,
+                    'a' => itemPart.a,
+                    's' => itemPart.s,
                     _ => throw new Exception("Invalid instruction"),
                 };
 
                 if(instruction.comparison == Comparison.GreaterThan)
                 {
-                    if(comparingValue > instruction.comparedValue)
+                    if(comparingValue.Start.Value > instruction.comparedValue)
                     {
-                        forwardingWorkflow = instruction.forwardWorkflow;
-                        return instruction.action;
+                        if (instruction.action == Action.Accept)
+                        {
+                            acceptedItemParts.Add(itemPart);
+                        }
+                        else if (instruction.action == Action.Forward)
+                        {
+                            // add it back on the queue
+                            itemParts.Enqueue((itemPart, instruction.forwardWorkflow));
+                        }
+
+                        return;
                     }
                 }
                 else if(instruction.comparison == Comparison.LessThan)
                 {
-                    if(comparingValue < instruction.comparedValue)
+                    if(comparingValue.Start.Value < instruction.comparedValue)
                     {
-                        forwardingWorkflow = instruction.forwardWorkflow;
-                        return instruction.action;
+                        if (instruction.action == Action.Accept)
+                        {
+                            acceptedItemParts.Add(itemPart);
+                        }
+                        else if (instruction.action == Action.Forward)
+                        {
+                            // add it back on the queue
+                            itemParts.Enqueue((itemPart, instruction.forwardWorkflow));
+                        }
+
+                        return;
                     }
                 }
             }
@@ -209,26 +237,7 @@ namespace Day19
             throw new Exception("Invalid workflow");
         }
 
-        bool isAccepted(ItemPart itemPart)
-        {
-            var flow = workflows["in"];
 
-            while(true)
-            {
-                var action = RunWorkflowForItem(flow, itemPart, out string forwardingWorkflow);
-
-                if(action == Action.Accept)
-                {
-                    return true;
-                }
-                else if(action == Action.Reject)
-                {
-                    return false;
-                }
-
-                flow = workflows[forwardingWorkflow];
-            }
-        }
 
     }
 }
